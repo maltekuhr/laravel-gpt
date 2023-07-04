@@ -8,6 +8,12 @@ use OpenAI\Responses\Chat\CreateResponseMessage;
 
 class ChatMessage
 {
+    /**
+     * @param ChatRole $role
+     * @param string|null $name
+     * @param mixed|null $content
+     * @param ChatFunctionCall|null $functionCall
+     */
     public function __construct(
         public readonly ChatRole $role,
         public readonly ?string $name = null,
@@ -42,6 +48,9 @@ class ChatMessage
         );
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
         $message = [

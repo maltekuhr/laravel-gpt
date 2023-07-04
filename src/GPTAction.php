@@ -2,17 +2,26 @@
 
 namespace MalteKuhr\LaravelGPT;
 
-use MalteKuhr\LaravelGPT\Concerns\HasChat;
+use Closure;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
-use MalteKuhr\LaravelGPT\Managers\ChatManager;
+use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
+use MalteKuhr\LaravelGPT\Extensions\FillableGPTFunction;
+use MalteKuhr\LaravelGPT\Helper\Dir;
+use MalteKuhr\LaravelGPT\Managers\FunctionManager;
+use MalteKuhr\LaravelGPT\Models\ChatMessage;
 
-abstract class GPTRequest
+abstract class GPTAction
 {
-    use HasChat;
+    use Dir;
 
     /**
-     * Create a new GPTRequest instance.
+     * @var FillableGPTChat|null
+     */
+    protected ?FillableGPTChat $chat = null;
+
+    /**
+     * Create a new GPTAction instance.
      *
      * @param ...$arguments
      * @return static
@@ -33,30 +42,45 @@ abstract class GPTRequest
     }
 
     /**
-     * The functions which are available to the assistant. The functions must be
-     * an array of classes (e.g. [new SaveSentimentGPTFunction()]). The functions
-     * must extend the GPTFunction class.
+     * Specifies the function to be invoked by the model. The function is implemented as a
+     * Closure which may take parameters that are provided by the model. If extra arguments
+     * are included in the documentation to optimize model's performance (by allowing it more
+     * thinking time), these can be disregarded by not including them within the Closure
+     * parameters.
      *
-     * @return array|null
+     * @return Closure
      */
-    public function functions(): ?array
+    abstract public function function(): Closure;
+
+    /**
+     * @return string
+     */
+    public function functionName(): string
     {
-        return null;
+        return FunctionManager::getFunctionName($this, ['GPT', 'Action']);
     }
 
     /**
-     * The function call method can force the model to call a specific function or
-     * force the model to answer with a message. If you return with the class name
-     * e.g. SaveSentimentGPTFunction::class the model will call the function. If
-     * you return with false the model will answer with a message. If you return
-     * with null or true the model will decide if it should call a function or
-     * answer with a message.
+     * The description of what the function does. This is utilized for generating the
+     * function documentation.
      *
-     * @return string|bool|null
+     * @return string
      */
-    public function functionCall(): string|bool|null
+    public function description(): string
     {
-        return null;
+        return 'The function you need to call.';
+    }
+
+    /**
+     * Defines the rules for input validation and JSON schema generation. Override this
+     * method to provide custom validation rules for the function. The documentation will
+     * have the same order as the rules are defined in this method.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [];
     }
 
     /**
@@ -72,7 +96,7 @@ abstract class GPTRequest
      */
     public function model(): string
     {
-        return 'gpt-3.5-turbo';
+        return config('laravel-gpt.default_model');
     }
 
     /**
@@ -130,15 +154,33 @@ abstract class GPTRequest
     }
 
     /**
-     * Sends the chat to the OpenAI API and returns the updated instance of the
-     * object including the new messages in the chat.
+     * Sends the chat to the OpenAI API and returns the result of the function call.
      *
-     * @return $this
+     * @param string $message
+     * @return ChatMessage
      * @throws FunctionCallRequiresFunctionsException
      * @throws MissingFunctionException
      */
-    public function send(): self
+    public function send(string $message): mixed
     {
-        return ChatManager::send($this);
+        $this->chat = FillableGPTChat::make(
+            systemMessage: fn () => $this->systemMessage(),
+            function: new FillableGPTFunction(
+                name: fn () => $this->functionName(),
+                description: fn () => $this->description(),
+                function: fn () => $this->function(),
+                rules: fn () => $this->rules(),
+            ),
+            model: fn () => $this->model(),
+            temperature: fn () => $this->temperature(),
+            maxTokens: fn () => $this->maxTokens(),
+            sending: fn () => $this->sending(),
+            received: fn () => $this->received()
+        );
+
+        $this->chat->addMessage($message);
+        $this->chat->send();
+
+        return $this->chat->latestMessage()->content;
     }
 }

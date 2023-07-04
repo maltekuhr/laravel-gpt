@@ -4,19 +4,19 @@ namespace MalteKuhr\LaravelGPT\Commands\Make;
 
 use MalteKuhr\LaravelGPT\Commands\GPTMakeCommand;
 
-class GPTRequestMakeCommand extends GPTMakeCommand
+class GPTActionMakeCommand extends GPTMakeCommand
 {
-    protected $signature = 'make:gpt-request {name}';
+    protected $signature = 'make:gpt-action {name}';
 
-    protected $description = 'Create a new GPT request class';
+    protected $description = 'Create a new GPT action class';
 
     protected function getDefaultNamespace(string $name): string
     {
-        return "GPT\\Requests\\$name";
+        return "GPT\\Actions\\$name";
     }
 
     protected function getClassName(): string
     {
-        return "GPTRequest";
+        return "GPTAction";
     }
 }

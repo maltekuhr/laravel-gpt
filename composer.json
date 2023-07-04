@@ -1,9 +1,10 @@
 {
     "name": "maltekuhr/laravel-gpt",
-    "description": "A Laravel package to integrate GPT-4 and GPT-3.5 with known features from Laravel.",
+    "description": "LaravelGPT is a seamless tool for integrating OpenAI's ChatGPT into Laravel applications, simplifying API connections, enhancing code readability, and empowering user-centric application development.",
     "keywords": [
         "laravel",
 	    "openai",
+        "chatgpt",
         "gpt"
     ],
     "homepage": "https://github.com/maltekuhr/laravel-gpt",
@@ -40,12 +41,6 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "php-http/discovery": true
-        }
     },
     "extra": {
         "laravel": {

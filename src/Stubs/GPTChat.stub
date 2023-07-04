@@ -2,9 +2,9 @@
 
 namespace App\{NAMESPACE};
 
-use MalteKuhr\LaravelGPT\GPTRequest;
+use MalteKuhr\LaravelGPT\GPTChat;
 
-class {NAME} extends GPTRequest
+class {NAME} extends GPTChat
 {
     /**
      * The message which explains the assistant what to do and which rules to follow.
@@ -43,15 +43,5 @@ class {NAME} extends GPTRequest
     public function functionCall(): string|bool|null
     {
         return null;
-    }
-
-    /**
-     * The model which should be used for the response.
-     *
-     * @return string
-     */
-    public function model(): string
-    {
-        return 'gpt-3.5-turbo';
     }
 }

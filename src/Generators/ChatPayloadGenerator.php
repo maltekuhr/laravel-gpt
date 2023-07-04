@@ -5,47 +5,65 @@ namespace MalteKuhr\LaravelGPT\Generators;
 use Illuminate\Support\Arr;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
+use MalteKuhr\LaravelGPT\GPTChat;
 use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\GPTRequest;
 use MalteKuhr\LaravelGPT\Managers\FunctionManager;
 use MalteKuhr\LaravelGPT\Models\ChatMessage;
 
 class ChatPayloadGenerator
 {
     /**
+     * @param GPTChat $chat
+     */
+    protected function __construct(
+        protected GPTChat $chat
+    ) {}
+
+    /**
+     * Creates a new instance of the class.
+     *
+     * @param GPTChat $chat
+     * @return self
+     */
+    public static function make(GPTChat $chat): self
+    {
+        return new self($chat);
+    }
+
+    /**
      * Generates the payload for the chat completion endpoint.
      *
-     * @param GPTRequest $request
      * @return array
      * @throws FunctionCallRequiresFunctionsException
      * @throws MissingFunctionException
      */
-    public static function generate(GPTRequest $request): array
+    public function generate(): array
     {
         return array_filter([
-            'model' => $request->model(),
-            'messages' => self::getMessages($request),
-            'functions' => self::getFunctions($request),
-            'function_call' => self::getFunctionCall($request),
-            'temperature' => $request->temperature(),
-            'max_tokens' => $request->maxTokens(),
+            'model' => $this->chat->model(),
+            'messages' => self::getMessages(),
+            'functions' => self::getFunctions(),
+            'function_call' => self::getFunctionCall(),
+            'temperature' => $this->chat->temperature(),
+            'max_tokens' => $this->chat->maxTokens(),
         ], fn ($value) => $value !== null);
     }
 
     /**
-     * @param GPTRequest $request
+     * Converts the chat messages into the required format.
+     *
      * @return array
      */
-    protected static function getMessages(GPTRequest $request): array
+    protected function getMessages(): array
     {
-        $messages = Arr::map($request->messages, function (ChatMessage $message) {
+        $messages = Arr::map($this->chat->messages, function (ChatMessage $message) {
             return $message->toArray();
         });
 
-        if ($request->systemMessage()) {
+        if ($this->chat->systemMessage()) {
             array_unshift($messages, [
                 'role' => 'system',
-                'content' => $request->systemMessage()
+                'content' => $this->chat->systemMessage()
             ]);
         }
 
@@ -53,45 +71,58 @@ class ChatPayloadGenerator
     }
 
     /**
-     * @param GPTRequest $request
+     * Gets the functions required for the request. Removes
+     * unused functions when function call is set.
+     *
      * @return array|null
      */
-    protected static function getFunctions(GPTRequest $request): ?array
+    protected function getFunctions(): ?array
     {
         // handle if function call is null or []
-        if ($request->functions() == null) {
+        if ($this->chat->functions() == null) {
             return null;
         }
 
+        // get functions
+        $functions = $this->chat->functions();
+
+        // remove unused functions when function call
+        if (is_string($this->chat->functionCall())) {
+            $functions = Arr::where($functions, function (GPTFunction $function) {
+                return $function instanceof ($this->chat->functionCall());
+            });
+        }
+
         // generate docs for functions
-        return Arr::map($request->functions(), function (GPTFunction $function): array {
-            return FunctionManager::docs($function);
+        return Arr::map($functions, function (GPTFunction $function): array {
+            return FunctionManager::make($function)->docs();
         });
     }
 
     /**
-     * @param GPTRequest $request
+     * Converts the functionCall() into the required format.
+     *
      * @return string|array|null
      * @throws FunctionCallRequiresFunctionsException
      * @throws MissingFunctionException
      */
-    protected static function getFunctionCall(GPTRequest $request): string|array|null
+    protected function getFunctionCall(): string|array|null
     {
         // handle if function call is null
-        if ($request->functionCall() === null) {
+        if ($this->chat->functionCall() === null) {
             return null;
         }
 
-        if (is_subclass_of($request->functionCall(), GPTFunction::class)) {
+        if (is_subclass_of($this->chat->functionCall(), GPTFunction::class)) {
             /* @var GPTFunction $function */
             $function = Arr::first(
-                array: $request->functions(),
-                callback: fn (GPTFunction $function) => $function instanceof ($request->functionCall())
+                array: $this->chat->functions(),
+                callback: fn (GPTFunction $function) => $function instanceof ($this->chat->functionCall())
             );
 
             // handle if function call is not in functions
             if ($function == null) {
-                throw MissingFunctionException::create($request->functionCall(), get_class($request));
+                throw MissingFunctionException::create($this->chat->functionCall(), get_class($this->chat));
             }
 
             return [
@@ -99,10 +130,10 @@ class ChatPayloadGenerator
             ];
         }
 
-        if ($request->functionCall() && $request->functions() == null) {
+        if ($this->chat->functionCall() && $this->chat->functions() == null) {
             throw FunctionCallRequiresFunctionsException::create();
         }
 
-        return $request->functionCall() ? 'auto' : 'none';
+        return $this->chat->functionCall() ? 'auto' : 'none';
     }
 }

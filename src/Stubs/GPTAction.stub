@@ -2,28 +2,34 @@
 
 namespace App\{NAMESPACE};
 
-use MalteKuhr\LaravelGPT\GPTFunction;
+use MalteKuhr\LaravelGPT\GPTAction;
 use Closure;
 
-class {NAME} extends GPTFunction
+class {NAME} extends GPTAction
 {
     /**
-     * Specifies a function to be invoked by the model. The function is implemented as a
+     * The message which explains the assistant what to do and which rules to follow.
+     *
+     * @return string|null
+     */
+    public function systemMessage(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Specifies the function to be invoked by the model. The function is implemented as a
      * Closure which may take parameters that are provided by the model. If extra arguments
      * are included in the documentation to optimize model's performance (by allowing it more
      * thinking time), these can be disregarded by not including them within the Closure
      * parameters.
-     *
-     * If the Closure returns null, the chat interaction is paused until the 'send()' method in
-     * the request is invoked again. For all other return values, the response is JSON encoded
-     * and forwarded to the model for further processing.
      *
      * @return Closure
      */
     public function function(): Closure
     {
         return function (): mixed {
-            // code
+            // your code here
         };
     }
 
@@ -37,16 +43,5 @@ class {NAME} extends GPTFunction
     public function rules(): array
     {
         return [];
-    }
-
-    /**
-     * Describes the purpose and functionality of the GPT function. This is utilized
-     * for generating the function documentation.
-     *
-     * @return string
-     */
-    public function description(): string
-    {
-        // description
     }
 }
