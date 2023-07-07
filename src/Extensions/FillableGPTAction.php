@@ -3,14 +3,20 @@
 namespace MalteKuhr\LaravelGPT\Extensions;
 
 use Closure;
+use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
+use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
+use MalteKuhr\LaravelGPT\GPTAction;
 use MalteKuhr\LaravelGPT\GPTChat;
+use MalteKuhr\LaravelGPT\Managers\FunctionManager;
+use MalteKuhr\LaravelGPT\Models\ChatMessage;
 
-class FillableGPTChat extends GPTChat
+class FillableGPTAction extends GPTAction
 {
     public function __construct(
-        protected ?Closure $systemMessage = null,
-        protected ?Closure $functions = null,
-        protected ?Closure $functionCall = null,
+        protected Closure $systemMessage,
+        protected Closure $function,
+        protected Closure $rules,
+        protected ?Closure $functionName = null,
         protected ?Closure $model = null,
         protected ?Closure $temperature = null,
         protected ?Closure $maxTokens = null,
@@ -20,17 +26,22 @@ class FillableGPTChat extends GPTChat
 
     public function systemMessage(): ?string
     {
-        return $this->systemMessage ? ($this->systemMessage)() : parent::systemMessage();
+        return ($this->systemMessage)();
     }
 
-    public function functions(): ?array
+    public function function(): Closure
     {
-        return $this->functions ? ($this->functions)() : parent::functions();
+        return $this->function;
     }
 
-    public function functionCall(): string|bool|null
+    public function rules(): array
     {
-        return $this->functionCall ? ($this->functionCall)() : parent::functionCall();
+        return ($this->rules)();
+    }
+
+    public function functionName(): string
+    {
+        return $this->functionName ? ($this->functionName)() : parent::functionName();
     }
 
     public function model(): string

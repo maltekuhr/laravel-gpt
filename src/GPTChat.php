@@ -8,7 +8,7 @@ use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
 use MalteKuhr\LaravelGPT\Helper\Dir;
 use MalteKuhr\LaravelGPT\Managers\ChatManager;
 
-abstract class GPTChat
+class GPTChat
 {
     use HasChat;
     use Dir;
@@ -141,6 +141,6 @@ abstract class GPTChat
      */
     public function send(): self
     {
-        return ChatManager::make($this)->send($this);
+        return ChatManager::make($this)->send();
     }
 }

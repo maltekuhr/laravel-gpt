@@ -4,7 +4,6 @@ namespace MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\RuleConvert
 
 use Illuminate\Validation\Rules\Enum;
 use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\AbstractRuleConverter;
-use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\Test\RuleConverterTest;
 
 class EnumRuleConverter extends AbstractRuleConverter
 {

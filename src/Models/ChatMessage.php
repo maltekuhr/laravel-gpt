@@ -55,7 +55,7 @@ class ChatMessage
     {
         $message = [
             'role' => $this->role->value,
-            'content' => json_encode($this->content),
+            'content' => is_string($this->content) ? $this->content : json_encode($this->content),
         ];
 
         if ($this->name) {

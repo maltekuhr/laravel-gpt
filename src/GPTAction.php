@@ -3,6 +3,9 @@
 namespace MalteKuhr\LaravelGPT;
 
 use Closure;
+use Illuminate\Support\Arr;
+use MalteKuhr\LaravelGPT\Enums\ChatRole;
+use MalteKuhr\LaravelGPT\Exceptions\GPTAction\NoFunctionCallException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
 use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
@@ -10,6 +13,7 @@ use MalteKuhr\LaravelGPT\Extensions\FillableGPTFunction;
 use MalteKuhr\LaravelGPT\Helper\Dir;
 use MalteKuhr\LaravelGPT\Managers\FunctionManager;
 use MalteKuhr\LaravelGPT\Models\ChatMessage;
+use OpenAI\Resources\Chat;
 
 abstract class GPTAction
 {
@@ -165,17 +169,20 @@ abstract class GPTAction
     {
         $this->chat = FillableGPTChat::make(
             systemMessage: fn () => $this->systemMessage(),
-            function: new FillableGPTFunction(
-                name: fn () => $this->functionName(),
-                description: fn () => $this->description(),
-                function: fn () => $this->function(),
-                rules: fn () => $this->rules(),
-            ),
+            functions: fn () => [
+                new FillableGPTFunction(
+                    name: fn () => $this->functionName(),
+                    description: fn () => $this->description(),
+                    function: fn () => $this->function(),
+                    rules: fn () => $this->rules(),
+                )
+            ],
+            functionCall: fn () => FillableGPTFunction::class,
             model: fn () => $this->model(),
             temperature: fn () => $this->temperature(),
             maxTokens: fn () => $this->maxTokens(),
             sending: fn () => $this->sending(),
-            received: fn () => $this->received()
+            received: fn () => $this->received(),
         );
 
         $this->chat->addMessage($message);

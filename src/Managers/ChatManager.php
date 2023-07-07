@@ -4,6 +4,7 @@ namespace MalteKuhr\LaravelGPT\Managers;
 
 use Illuminate\Support\Arr;
 use MalteKuhr\LaravelGPT\Enums\ChatRole;
+use MalteKuhr\LaravelGPT\Exceptions\GPTAction\NoFunctionCallException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTChat\ErrorPatternFoundException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallDecodingException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
@@ -52,7 +53,7 @@ class ChatManager
 
         // send chat completion request
         $answer = OpenAI::chat()->create(
-            ChatPayloadGenerator::make($this->chat)->generate()
+            $payload = ChatPayloadGenerator::make($this->chat)->generate()
         )->choices[0]->message;
 
         // handle the response
@@ -63,6 +64,12 @@ class ChatManager
             return $this->chat;
         }
 
+        // check if function call is different then expected
+        if (isset($payload['function_call']) && $answer->functionCall?->name !== $payload['function_call']['name'] && !in_array($payload['function_call']['name'], ['auto', 'none'])) {
+            // handle wrong or missing function call
+            return $this->handleWrongFunctionCall($payload);
+        }
+
         // handle next steps
         $latestMessage = $this->chat->latestMessage();
         if ($latestMessage->role == ChatRole::ASSISTANT && $latestMessage->functionCall != null) {
@@ -70,6 +77,25 @@ class ChatManager
         } else {
             return $this->chat;
         }
+    }
+
+    protected function handleWrongFunctionCall(array $payload): GPTChat
+    {
+        // throw exception if model hasn't changed answer after feedback
+        if (Arr::first($this->chat->messages, fn (ChatMessage $message) => $message->role == ChatRole::FUNCTION && $message->content == NoFunctionCallException::modelMessage())) {
+            throw NoFunctionCallException::create();
+        }
+
+        // provide feedback to model
+        $this->chat->addMessage(
+            ChatMessage::from(
+                role: ChatRole::FUNCTION,
+                content: NoFunctionCallException::modelMessage(),
+                name: $payload['function_call']['name']
+            )
+        );
+
+        return $this->send();
     }
 
     /**
@@ -153,7 +179,7 @@ class ChatManager
         // check if function call has response and wasn't forced
         if ($this->chat->latestMessage()->content !== null && !$isForced) {
             // proceed in conversation with model
-            return self::send($this->chat);
+            return self::send();
         } else {
             return $this->chat;
         }
