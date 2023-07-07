@@ -4,7 +4,6 @@ namespace MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\RuleConvert
 
 use MalteKuhr\LaravelGPT\Exceptions\JsonSchemaService\IncompatibleValidationRuleException;
 use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\AbstractRuleConverter;
-use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\Test\RuleConverterTest;
 
 ;
 

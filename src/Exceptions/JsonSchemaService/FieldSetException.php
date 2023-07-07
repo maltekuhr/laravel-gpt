@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MalteKuhr\LaravelGPT\Exceptions\JsonSchemaService;
 
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**

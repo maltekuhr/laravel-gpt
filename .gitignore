@@ -2,3 +2,4 @@
 .phpunit.result.cache
 /.idea
 .env
+.composer.lock

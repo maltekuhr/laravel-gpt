@@ -3,7 +3,6 @@
 namespace MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\RuleConverters;
 
 use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\AbstractRuleConverter;
-use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\Test\RuleConverterTest;
 
 class IntegerRuleConverter extends AbstractRuleConverter
 {

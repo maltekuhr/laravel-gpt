@@ -4,6 +4,7 @@ namespace MalteKuhr\LaravelGPT\Concerns;
 
 use Illuminate\Support\Arr;
 use MalteKuhr\LaravelGPT\Enums\ChatRole;
+use MalteKuhr\LaravelGPT\GPTChat;
 use MalteKuhr\LaravelGPT\Models\ChatMessage;
 
 trait HasChat
@@ -15,9 +16,9 @@ trait HasChat
 
     /**
      * @param ChatMessage|string $message
-     * @return void
+     * @return static
      */
-    public function addMessage(ChatMessage|string $message): void
+    public function addMessage(ChatMessage|string $message): static
     {
         if (is_string($message)) {
             $message = ChatMessage::from(
@@ -27,6 +28,8 @@ trait HasChat
         }
 
         $this->messages[] = $message;
+
+        return $this;
     }
 
     /**

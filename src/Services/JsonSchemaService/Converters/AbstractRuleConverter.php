@@ -3,7 +3,6 @@
 namespace MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters;
 
 use MalteKuhr\LaravelGPT\Exceptions\JsonSchemaService\FieldSetException;
-use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\Test\RuleConverterTest;
 
 abstract class AbstractRuleConverter
 {

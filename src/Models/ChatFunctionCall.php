@@ -7,6 +7,10 @@ use OpenAI\Responses\Chat\CreateResponseFunctionCall;
 
 class ChatFunctionCall
 {
+    /**
+     * @param string $name
+     * @param array $arguments
+     */
     public function __construct(
         public readonly string $name,
         public readonly array $arguments
@@ -42,6 +46,9 @@ class ChatFunctionCall
         );
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
         return [

@@ -17,9 +17,9 @@ class BetweenRuleConverter extends AbstractRuleConverter
     {
         foreach ($this->rules as $rule) {
             if (is_string($rule) && str_starts_with($rule, 'between:')) {
-                $parts = Arr::map(explode(',', preg_replace('/^between:/', '', $rule)), function ($part) {
+                $parts = array_map(function ($part) {
                     return intval($part);
-                });
+                }, explode(',', preg_replace('/^between:/', '', $rule)));
 
                 if ($this->getType() == 'array') {
                     $this->setField('minItems', $parts[0]);

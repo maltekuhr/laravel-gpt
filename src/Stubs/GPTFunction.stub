@@ -2,8 +2,8 @@
 
 namespace App\{NAMESPACE};
 
-use Closure;
 use MalteKuhr\LaravelGPT\GPTFunction;
+use Closure;
 
 class {NAME} extends GPTFunction
 {

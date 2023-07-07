@@ -3,12 +3,18 @@
 namespace MalteKuhr\LaravelGPT\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Input\InputOption;
 
 abstract class GPTMakeCommand extends Command
 {
     abstract protected function getDefaultNamespace(string $name): string;
 
     abstract protected function getClassName(): string;
+
+    protected function configure()
+    {
+        $this->addOption('clean', null, InputOption::VALUE_NONE, 'Remove all doc block comments');
+    }
 
     protected function getStub(string $className): string
     {
@@ -63,6 +69,11 @@ abstract class GPTMakeCommand extends Command
 
         $stub = $this->getStub($this->getClassName());
 
+        // If the 'clean' option is set, remove doc block comments
+        if ($this->option('clean')) {
+            $stub = $this->removeDocBlocks($stub);
+        }
+
         $stub = str_replace('{NAMESPACE}', $namespace, $stub);
         $stub = str_replace('{NAME}', $className, $stub);
 
@@ -82,5 +93,26 @@ abstract class GPTMakeCommand extends Command
         $this->newLine();
         $this->output->writeln("  <bg=blue;fg=white> INFO </><fg=black> {$this->getClassName()} <options=bold>[App\\$namespace\\$className.php]</> created successfully.</>");
         $this->newLine();
+    }
+
+    protected function removeDocBlocks(string $code): string
+    {
+        $lines = explode("\n", $code);
+        $cleanLines = [];
+        $isInDocBlock = false;
+
+        foreach ($lines as $line) {
+            if (strpos($line, '/**') !== false) {
+                $isInDocBlock = true;
+            }
+            if (!$isInDocBlock) {
+                $cleanLines[] = $line;
+            }
+            if (strpos($line, '*/') !== false) {
+                $isInDocBlock = false;
+            }
+        }
+
+        return implode("\n", $cleanLines);
     }
 }

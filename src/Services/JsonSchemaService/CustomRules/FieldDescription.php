@@ -3,9 +3,9 @@
 namespace MalteKuhr\LaravelGPT\Services\JsonSchemaService\CustomRules;
 
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Rule;
 
-class FieldDescription implements ValidationRule
+class FieldDescription implements Rule
 {
     public function __construct(
         public readonly string $description
@@ -16,7 +16,13 @@ class FieldDescription implements ValidationRule
         return new static($description);
     }
 
-    public function validate(string $attribute, mixed $value, Closure $fail): void
+    public function passes($attribute, $value)
     {
+        return true;
+    }
+
+    public function message()
+    {
+        return [];
     }
 }

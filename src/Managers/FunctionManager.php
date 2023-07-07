@@ -16,33 +16,47 @@ use ReflectionClass;
 class FunctionManager
 {
     /**
+     * @param GPTFunction $function
+     */
+    protected function __construct(
+        protected GPTFunction $function
+    ) {}
+
+    /**
+     * @param GPTFunction $function
+     * @return self
+     */
+    public static function make(GPTFunction $function): self
+    {
+        return new self($function);
+    }
+
+    /**
      * Generates the documentation for the function.
      *
-     * @param GPTFunction $function
      * @return array
      */
-    public static function docs(GPTFunction $function): array
+    public function docs(): array
     {
-        $schema = self::generateSchema($function);
+        $schema = self::generateSchema();
 
         return [
-            'name' => $function->name(),
+            'name' => $this->function->name(),
             'parameters' => collect($schema)->toArray(),
-            'description' => $function->description()
+            'description' => $this->function->description()
         ];
     }
 
     /**
      * Generates the json schema for the function.
      *
-     * @param GPTFunction $function
      * @return array
      */
-    protected static function generateSchema(GPTFunction $function): array
+    protected function generateSchema(): array
     {
-        $schema = JsonSchemaService::convert($function->rules());
+        $schema = JsonSchemaService::convert($this->function->rules());
 
-        $reflection = new ReflectionClosure($function->function());
+        $reflection = new ReflectionClosure($this->function->function());
         foreach ($reflection->getParameters() as $parameter) {
             if (!$parameter->isDefaultValueAvailable() && !$parameter->allowsNull()) {
                 $schema['required'] = array_unique([...$schema['required'], $parameter->getName()]);
@@ -55,19 +69,18 @@ class FunctionManager
     /**
      * Calls the function and validates the arguments.
      *
-     * @param GPTFunction $function
      * @param array $arguments
      * @return ChatMessage
      */
-    public static function call(GPTFunction $function, array $arguments): ChatMessage
+    public function call(array $arguments): ChatMessage
     {
         try {
-            self::validate($function, $arguments);
+            self::validate($arguments);
 
-            $arguments = self::filterArguments($function, $arguments);
+            $arguments = $this->getFilteredArguments($arguments);
 
             $content = call_user_func_array(
-                callback: $function->function(),
+                callback: $this->function->function(),
                 args: $arguments
             );
         } catch (ValidationException $exception) {
@@ -79,21 +92,20 @@ class FunctionManager
         return ChatMessage::from(
             role: ChatRole::FUNCTION,
             content: $content,
-            name: $function->name()
+            name: $this->function->name()
         );
     }
 
     /**
      * Validates the given input against the rules of the given GPTFunction.
      *
-     * @param GPTFunction $function
      * @param array $input
      * @return array
      */
-    protected static function validate(GPTFunction $function, array $input): array
+    protected function validate(array $input): array
     {
         $validator = Validator::make(
-            $input, $function->rules(), $function->messages()
+            $input, $this->function->rules(), $this->function->messages()
         );
 
         if ($validator->fails()) {
@@ -106,29 +118,31 @@ class FunctionManager
     }
 
     /**
-     * Removes all arguments which are not defined in the function.
+     * Removes all arguments which can't be passed to the function.
      *
-     * @param GPTFunction $function
      * @param array $arguments
      * @return array
      */
-    protected static function filterArguments(GPTFunction $function, array $arguments): array
+    protected function getFilteredArguments(array $arguments): array
     {
-        $parameters = (new ReflectionClosure($function->function()))->getParameters();
+        $parameters = (new ReflectionClosure($this->function->function()))->getParameters();
         return Arr::only($arguments, Arr::pluck($parameters, 'name'));
     }
 
     /**
      * Extracts the function name from the class name for a given GPTFunction.
      *
-     * @param GPTFunction $function
+     * @param array $parts
      * @return string
      */
-    public static function getFunctionName(GPTFunction $function): string
+    public static function getFunctionName($function, array $parts = ['GPT', 'Function']): string
     {
         $name = (new ReflectionClass(get_class($function)))->getShortName();
-        $name = str_ends_with($name, 'Function') ? substr($name, 0, -8) : $name;
-        $name = str_ends_with($name, 'GPT') ? substr($name, 0, -3) : $name;
+
+        foreach (array_reverse($parts) as $part) {
+            $name = str_ends_with($name, $part) ? substr($name, 0, -strlen($part)) : $name;
+        }
+
         return Str::snake($name);
     }
 }

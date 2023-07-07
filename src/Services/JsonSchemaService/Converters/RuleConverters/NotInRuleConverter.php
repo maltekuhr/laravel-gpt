@@ -2,7 +2,6 @@
 
 namespace MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\RuleConverters;
 
-use Illuminate\Validation\Rules\In;
 use Illuminate\Validation\Rules\NotIn;
 use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\AbstractRuleConverter;
 

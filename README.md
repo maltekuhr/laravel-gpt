@@ -1,81 +1,9 @@
-LaravelGPT
----
+![LaravelGPT](https://github.com/maltekuhr/laravel-gpt/assets/80050109/21071831-78ba-4d0a-9911-f19f5a174e0b)
+# Unleash the Power of OpenAI's ChatGPT API
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/maltekuhr/laravel-gpt.svg?style=flat-square)](https://packagist.org/packages/maltekuhr/laravel-gpt)
 [![Total Downloads](https://img.shields.io/packagist/dt/maltekuhr/laravel-gpt.svg?style=flat-square)](https://packagist.org/packages/maltekuhr/laravel-gpt)
 
-This package makes it easy to work with the OpenAI Chat Completion API including Function Calling. The package can translate Laravel Validation Rules into the JSON Schema format that is required by the API.
-
-## Example
-```php
-class SentimentGPTRequest extends GPTRequest
-{
-    public function __construct(
-        public Customer $customer
-    ) {}
-
-    public function systemMessage(): ?string
-    {
-        return BladePromptService::render(__DIR__, 'system');
-    }
-
-    public function functions(): ?array
-    {
-        return [
-            new SaveSentimentGPTFunction($this->customer)
-        ];
-    }
-
-    public function functionCall(): string|bool|null
-    {
-        return SaveSentimentGPTFunction::class;
-    }
-
-    public function model(): string
-    {
-        return 'gpt-3.5-turbo';
-    }
-}
-
-```
-```php
-class SaveSentimentGPTFunction extends GPTFunction
-{
-    public function __construct(
-        public Customer $customer
-    ) {}
-    
-    public function function(): Closure
-    {
-        return function (string $sentiment): void {
-            $this->customer->sentiment = $sentiment;
-            $this->customer->save();
-        };
-    }
-
-    public function rules(): array
-    {
-        return [
-            'sentiment' => 'required|string|in:POSITIVE,NEGATIVE,NEUTRAL',
-        ];
-    }
-
-    public function description(): string
-    {
-        return 'Saves the sentiment of a message.';
-    }
-}
-
-```
-### Usage
-```php
-echo $customer->sentiment; // null
-
-SentimentGPTRequest::make($customer)
-    ->addMessage("I love this product!")
-    ->send();
-
-echo $customer->sentiment; // POSITIVE
-```
+Introducing LaravelGPT, a tool designed to simplify the integration of OpenAI's ChatGPT with your Laravel applications. This package offers a seamless connection to the OpenAI Chat Completions API, even supporting Function Calling. Forget the complications of crafting the correct JSON schema - LaravelGPT does the work for you. Say goodbye to dense, hard-to-read code, and start building the applications of the future! With LaravelGPT, you can truly unleash the power of ChatGPT in your applications, setting the stage for innovation and advanced user interaction.
 
 ## Installation
 You can install the package via composer:
@@ -91,13 +19,10 @@ OPENAI_ORGANIZATION=YOUR_ORGANIZATION_ID
 OPENAI_API_KEY=YOUR_API_KEY
 ```
 
-## Further Documentation
-For further documentation please see the [Wiki](https://github.com/maltekuhr/laravel-gpt/wiki).
+You are now ready to use LaravelGPT! I recommend you to read the [Wiki](https://github.com/maltekuhr/laravel-gpt/wiki).
 
-### ToDos
- - Tests for the core and for the validation rule converters
- - Support for all Laravel Validation Rules
- - Better documentation
+## Further Documentation
+For further documentation please see the [Documentation](https://laravel-gpt.maltekuhr.de).
 
 ## Contributing
 
