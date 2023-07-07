@@ -19,10 +19,10 @@ OPENAI_ORGANIZATION=YOUR_ORGANIZATION_ID
 OPENAI_API_KEY=YOUR_API_KEY
 ```
 
-You are now ready to use LaravelGPT! I recommend you to read the [Wiki](https://github.com/maltekuhr/laravel-gpt/wiki).
+You are now ready to use LaravelGPT! I recommend you to read the [Documentation](https://laravel-gpt.com).
 
 ## Further Documentation
-For further documentation please see the [Documentation](https://laravel-gpt.maltekuhr.de).
+For further documentation please see the [Documentation](https://laravel-gpt.com).
 
 ## Contributing
 
