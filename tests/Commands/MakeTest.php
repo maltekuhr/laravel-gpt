@@ -2,6 +2,7 @@
 
 namespace MalteKuhr\LaravelGPT\Tests\Commands;
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use MalteKuhr\LaravelGPT\Tests\TestCase;
 

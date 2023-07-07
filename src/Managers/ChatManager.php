@@ -4,8 +4,8 @@ namespace MalteKuhr\LaravelGPT\Managers;
 
 use Illuminate\Support\Arr;
 use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Exceptions\GPTAction\NoFunctionCallException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTChat\ErrorPatternFoundException;
+use MalteKuhr\LaravelGPT\Exceptions\GPTChat\NoFunctionCallException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallDecodingException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;

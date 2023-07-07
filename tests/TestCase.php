@@ -34,7 +34,7 @@ class TestCase extends BasicTestCase
 
     protected function setTestResponses(array $responses): void
     {
-        $responses = Arr::map($responses, fn ($response) => CreateResponse::fake([
+        $responses = array_map(fn ($response) => CreateResponse::fake([
             'choices' => [
                 [
                     'message' => [
@@ -47,7 +47,7 @@ class TestCase extends BasicTestCase
                     ]
                 ]
             ]
-        ]));
+        ]), $responses);
 
         $this->app->singleton(ClientContract::class, fn () => new OpenAIFake($responses));
     }

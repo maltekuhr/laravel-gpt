@@ -34,9 +34,12 @@ class ErrorPatternFoundException extends Exception
          * information.
          */
         return [
-            'function_calls' => Arr::map(Arr::where($this->messages, function (ChatMessage $message) {
-                return $message->functionCall != null;
-            }), fn (ChatMessage $message) => $message->functionCall->toArray()),
+            'function_calls' => array_map(
+                callback: fn (ChatMessage $message) => $message->functionCall->toArray(),
+                array: Arr::where($this->messages, function (ChatMessage $message) {
+                    return $message->functionCall != null;
+                })
+            ),
             'errors' => Arr::last($this->messages)['errors']
         ];
     }

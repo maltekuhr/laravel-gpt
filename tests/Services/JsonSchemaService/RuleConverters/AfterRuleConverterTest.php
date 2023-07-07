@@ -2,8 +2,8 @@
 
 namespace MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService\RuleConverters;
 
-use Carbon\Exceptions\InvalidFormatException;
 use MalteKuhr\LaravelGPT\Exceptions\JsonSchemaService\FieldSetException;
+use MalteKuhr\LaravelGPT\Exceptions\JsonSchemaService\InvalidFormatException;
 use MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService\RuleConverterTestCase;
 use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
 use Throwable;
@@ -32,7 +32,7 @@ class AfterRuleConverterTest extends RuleConverterTestCase
                 'result' => TestSchema::make()
                     ->set('type', 'string')
                     ->set('format', 'date')
-                    ->set('description', 'Must be a date after ' . now()->format('Y-m-d') . '.'),
+                    ->set('description', 'Must be a date after ' . date('Y-m-d') . '.'),
             ],
             [
                 'rules' => 'integer|after:today',

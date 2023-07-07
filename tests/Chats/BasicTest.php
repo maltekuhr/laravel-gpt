@@ -2,15 +2,10 @@
 
 namespace MalteKuhr\LaravelGPT\Tests\Chats;
 
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Exceptions\GPTAction\NoFunctionCallException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTAction;
+use MalteKuhr\LaravelGPT\Exceptions\GPTChat\NoFunctionCallException;
 use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
 use MalteKuhr\LaravelGPT\Extensions\FillableGPTFunction;
-use MalteKuhr\LaravelGPT\GPTChat;
 use MalteKuhr\LaravelGPT\Models\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Models\ChatMessage;
 use MalteKuhr\LaravelGPT\Tests\TestCase;
 
 class BasicTest extends TestCase
@@ -86,39 +81,39 @@ class BasicTest extends TestCase
 
     public function testIfFunctionCallForcingWorks()
     {
-        $this->assertThrows(function () {
-            $chat = FillableGPTChat::make(
-                systemMessage: fn () => 'Answer Laravel related questions!',
-                functions: fn () => [
-                    new FillableGPTFunction(
-                        name: fn () => 'search_documentation',
-                        description: fn () => 'Searches the Laravel documentation',
-                        function: fn () => function (string $query) {
-                            return [
-                                'result' => 'composer create-project laravel/laravel example-app'
-                            ];
-                        },
-                        rules: fn () => [
-                            'query' => 'required|string|max:255'
-                        ]
-                    )
-                ],
-                functionCall: fn () => FillableGPTFunction::class
-            );
+        $this->expectException(NoFunctionCallException::class);
 
-            $chat->addMessage('How to install Laravel?');
+        $chat = FillableGPTChat::make(
+            systemMessage: fn () => 'Answer Laravel related questions!',
+            functions: fn () => [
+                new FillableGPTFunction(
+                    name: fn () => 'search_documentation',
+                    description: fn () => 'Searches the Laravel documentation',
+                    function: fn () => function (string $query) {
+                        return [
+                            'result' => 'composer create-project laravel/laravel example-app'
+                        ];
+                    },
+                    rules: fn () => [
+                        'query' => 'required|string|max:255'
+                    ]
+                )
+            ],
+            functionCall: fn () => FillableGPTFunction::class
+        );
 
-            $this->setTestResponses([
-                [
-                    'content' => 'You can install Laravel using `composer create-project laravel/laravel example-app`!'
-                ],
-                [
-                    'content' => 'You can install Laravel using `composer create-project laravel/laravel example-app`!'
-                ],
-            ]);
+        $chat->addMessage('How to install Laravel?');
 
-            $chat->send();
-        }, NoFunctionCallException::class);
+        $this->setTestResponses([
+            [
+                'content' => 'You can install Laravel using `composer create-project laravel/laravel example-app`!'
+            ],
+            [
+                'content' => 'You can install Laravel using `composer create-project laravel/laravel example-app`!'
+            ],
+        ]);
+
+        $chat->send();
     }
 
     public function testIfFunctionCallForcingCorrectionWorks()

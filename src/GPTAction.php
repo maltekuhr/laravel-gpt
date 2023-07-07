@@ -3,9 +3,6 @@
 namespace MalteKuhr\LaravelGPT;
 
 use Closure;
-use Illuminate\Support\Arr;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Exceptions\GPTAction\NoFunctionCallException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
 use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
@@ -13,7 +10,6 @@ use MalteKuhr\LaravelGPT\Extensions\FillableGPTFunction;
 use MalteKuhr\LaravelGPT\Helper\Dir;
 use MalteKuhr\LaravelGPT\Managers\FunctionManager;
 use MalteKuhr\LaravelGPT\Models\ChatMessage;
-use OpenAI\Resources\Chat;
 
 abstract class GPTAction
 {

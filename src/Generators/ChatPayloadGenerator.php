@@ -56,9 +56,9 @@ class ChatPayloadGenerator
      */
     protected function getMessages(): array
     {
-        $messages = Arr::map($this->chat->messages, function (ChatMessage $message) {
+        $messages = array_map(function (ChatMessage $message) {
             return $message->toArray();
-        });
+        }, $this->chat->messages);
 
         if ($this->chat->systemMessage()) {
             array_unshift($messages, [
@@ -94,9 +94,9 @@ class ChatPayloadGenerator
         }
 
         // generate docs for functions
-        return Arr::map($functions, function (GPTFunction $function): array {
+        return array_map(function (GPTFunction $function): array {
             return FunctionManager::make($function)->docs();
-        });
+        }, $functions);
     }
 
     /**
