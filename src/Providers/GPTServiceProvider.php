@@ -2,9 +2,8 @@
 
 namespace MalteKuhr\LaravelGPT\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use MalteKuhr\LaravelGPT\Commands\Make\GPTActionMakeCommand;
-use MalteKuhr\LaravelGPT\Commands\Make\GPTChatMakeCommand;
+use Illuminate\Contracts\Support\DeferrableProvider;
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use MalteKuhr\LaravelGPT\Commands\Make\GPTFunctionMakeCommand;
 use MalteKuhr\LaravelGPT\Commands\Make\RuleConverterMakeCommand;
 use MalteKuhr\LaravelGPT\Exceptions\ApiKeyIsMissingException;
@@ -12,7 +11,7 @@ use OpenAI;
 use OpenAI\Client;
 use OpenAI\Contracts\ClientContract;
 
-class GPTServiceProvider extends ServiceProvider
+class GPTServiceProvider extends BaseServiceProvider implements DeferrableProvider
 {
     /**
      * Register the application services.
@@ -34,7 +33,7 @@ class GPTServiceProvider extends ServiceProvider
             return OpenAI::factory()
                 ->withApiKey($apiKey)
                 ->withOrganization($organization)
-                ->withHttpClient(new \GuzzleHttp\Client(['timeout' => config('laravel-gpt.request_timeout')]))
+                ->withHttpClient(new \GuzzleHttp\Client(['timeout' => config('laravel-gpt.request_timeout', 30)]))
                 ->make();
         });
 
@@ -48,6 +47,10 @@ class GPTServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../config/laravel-gpt.php' => config_path('laravel-gpt.php'),
+            ], 'public');
+
             $this->commands([
                 GPTFunctionMakeCommand::class,
                 GPTChatMakeCommand::class,
@@ -55,9 +58,19 @@ class GPTServiceProvider extends ServiceProvider
                 RuleConverterMakeCommand::class
             ]);
         }
+    }
 
-        $this->publishes([
-            __DIR__.'/../../config/laravel-gpt.php' => config_path('laravel-gpt.php'),
-        ], 'config');
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array<int, string>
+     */
+    public function provides(): array
+    {
+        return [
+            Client::class,
+            ClientContract::class,
+            'openai',
+        ];
     }
 }
