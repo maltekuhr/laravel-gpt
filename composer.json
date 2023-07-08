@@ -21,8 +21,7 @@
         "guzzlehttp/guzzle": "^7.5",
         "illuminate/support": "^9.2|^10",
         "laravel/framework": "^9.0|^10",
-        "openai-php/client": "^0.6.1",
-        "http-interop/http-factory-guzzle": "^0.1.0"
+        "openai-php/client": "^0.6.1"
     },
     "require-dev": {
         "orchestra/testbench": "^8.5",
