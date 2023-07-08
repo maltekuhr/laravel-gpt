@@ -4,6 +4,8 @@ namespace MalteKuhr\LaravelGPT\Providers;
 
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use MalteKuhr\LaravelGPT\Commands\Make\GPTActionMakeCommand;
+use MalteKuhr\LaravelGPT\Commands\Make\GPTChatMakeCommand;
 use MalteKuhr\LaravelGPT\Commands\Make\GPTFunctionMakeCommand;
 use MalteKuhr\LaravelGPT\Commands\Make\RuleConverterMakeCommand;
 use MalteKuhr\LaravelGPT\Exceptions\ApiKeyIsMissingException;
