@@ -39,5 +39,5 @@ abstract class RuleConverterTestCase extends TestCase
     /**
      * @return array{rules: string|array, result: array|TestSchema|Throwable}[]
      */
-    abstract public function casesProvider(): array;
+    abstract public static function casesProvider(): array;
 }

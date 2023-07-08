@@ -22,7 +22,7 @@ class NestedRulesTest extends TestCase
         $this->assertEquals($result, FunctionManager::make($function)->docs()['parameters']);
     }
 
-    public function casesProvider(): array
+    public static function casesProvider(): array
     {
         return [
             [

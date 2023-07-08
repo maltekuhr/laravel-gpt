@@ -29,7 +29,7 @@ class {NAME} extends GPTAction
     public function function(): Closure
     {
         return function (): mixed {
-            // your code here
+            // TODO: Implement Closure.
         };
     }
 
