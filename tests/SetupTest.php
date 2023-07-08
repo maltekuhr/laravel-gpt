@@ -58,7 +58,7 @@ class SetupTest extends TestCase
         );
     }
 
-    public function providerTestIfApiCanBeCalled()
+    public static function providerTestIfApiCanBeCalled()
     {
         return [
             ['Awesome!'],

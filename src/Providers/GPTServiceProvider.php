@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use MalteKuhr\LaravelGPT\Commands\Make\GPTActionMakeCommand;
 use MalteKuhr\LaravelGPT\Commands\Make\GPTChatMakeCommand;
 use MalteKuhr\LaravelGPT\Commands\Make\GPTFunctionMakeCommand;
+use MalteKuhr\LaravelGPT\Commands\Make\RuleConverterMakeCommand;
 use MalteKuhr\LaravelGPT\Exceptions\ApiKeyIsMissingException;
 use OpenAI;
 use OpenAI\Client;
@@ -50,7 +51,8 @@ class GPTServiceProvider extends ServiceProvider
             $this->commands([
                 GPTFunctionMakeCommand::class,
                 GPTChatMakeCommand::class,
-                GPTActionMakeCommand::class
+                GPTActionMakeCommand::class,
+                RuleConverterMakeCommand::class
             ]);
         }
 

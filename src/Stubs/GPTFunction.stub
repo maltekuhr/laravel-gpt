@@ -23,7 +23,7 @@ class {NAME} extends GPTFunction
     public function function(): Closure
     {
         return function (): mixed {
-            // code
+            // TODO: Implement Closure.
         };
     }
 
@@ -47,6 +47,6 @@ class {NAME} extends GPTFunction
      */
     public function description(): string
     {
-        // description
+        // TODO: Implement Description.
     }
 }

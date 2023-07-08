@@ -110,6 +110,12 @@ abstract class AbstractRuleConverter
         }
     }
 
+    /**
+     * @param $arr
+     * @param $path
+     * @param $value
+     * @return void
+     */
     private function setRecursive(&$arr, $path, $value)
     {
         $keys = explode('.', $path);
@@ -132,13 +138,7 @@ abstract class AbstractRuleConverter
      * @param string $field
      * @return mixed
      */
-    /**
-     * Returns the value of a field
-     *
-     * @param string $field
-     * @return mixed
-     */
-    public function getField(string $field)
+    public function getField(string $field): mixed
     {
         if (($this->schema['type'] ?? '') == 'array') {
             return $this->getRecursive($this->schema['items'] ?? [], $field);
@@ -147,6 +147,11 @@ abstract class AbstractRuleConverter
         }
     }
 
+    /**
+     * @param $arr
+     * @param $path
+     * @return mixed|null
+     */
     private function getRecursive($arr, $path)
     {
         $keys = explode('.', $path);

@@ -176,8 +176,14 @@ class ChatManager
         // make sure that the next request isn't the same
         $isForced = get_class($function) == $this->chat->functionCall();
 
-        // check if function call has response and wasn't forced
-        if ($this->chat->latestMessage()->content !== null && !$isForced) {
+        // check if function has response
+        $hasResponse = $this->chat->latestMessage()->content !== null;
+
+        // check if function response has errors
+        $hasErrors = isset($this->chat->latestMessage()->content['errors']);
+
+        // check if function call
+        if ((!$isForced && $hasResponse) || $hasErrors) {
             // proceed in conversation with model
             return self::send();
         } else {

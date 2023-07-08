@@ -1,0 +1,30 @@
+<?php
+
+namespace App\{NAMESPACE};
+
+use MalteKuhr\LaravelGPT\Services\JsonSchemaService\Converters\AbstractRuleConverter;
+
+class {NAME} extends AbstractRuleConverter
+{
+    /**
+     * The priority of the rule converter determines the order in which the
+     * rules are converted. The default priority is 0. The higher the priority,
+     * the earlier the rule is converted. Negative priorities are also possible.
+     *
+     * @return int
+     */
+    public static function priority(): int
+    {
+        return 0;
+    }
+
+    /**
+     * The handle method detects the rule and converts it to a json schema.
+     *
+     * @return void
+     */
+    public function handle(): void
+    {
+        // TODO: Implement handle() method.
+    }
+}

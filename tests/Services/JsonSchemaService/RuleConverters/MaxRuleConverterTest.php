@@ -13,7 +13,7 @@ class MaxRuleConverterTest extends RuleConverterTestCase
     /**
      * @return array{rules: string|array, result: array|TestSchema|Throwable}[]
      */
-    public function casesProvider(): array
+    public static function casesProvider(): array
     {
         return [
             [
