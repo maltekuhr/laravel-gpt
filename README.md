@@ -1,7 +1,5 @@
 ![LaravelGPT](https://github.com/maltekuhr/laravel-gpt/assets/80050109/21071831-78ba-4d0a-9911-f19f5a174e0b)
 # Unleash the Power of OpenAI's ChatGPT API
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/maltekuhr/laravel-gpt.svg?style=flat-square)](https://packagist.org/packages/maltekuhr/laravel-gpt)
-[![Total Downloads](https://img.shields.io/packagist/dt/maltekuhr/laravel-gpt.svg?style=flat-square)](https://packagist.org/packages/maltekuhr/laravel-gpt)
 
 Introducing LaravelGPT, a tool designed to simplify the integration of OpenAI's ChatGPT with your Laravel applications. This package offers a seamless connection to the OpenAI Chat Completions API, even supporting Function Calling. Forget the complications of crafting the correct JSON schema - LaravelGPT does the work for you. Say goodbye to dense, hard-to-read code, and start building the applications of the future! With LaravelGPT, you can truly unleash the power of ChatGPT in your applications, setting the stage for innovation and advanced user interaction.
 
