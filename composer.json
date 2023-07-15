@@ -1,6 +1,6 @@
 {
     "name": "maltekuhr/laravel-gpt",
-    "description": "A Laravel package to integrate GPT-4 and GPT-3.5 with known features from Laravel.",
+    "description": "Streamlined integration of OpenAI's ChatGPT (GPT-3.5, GPT-4) into Laravel applications.",
     "keywords": [
         "laravel",
 	    "openai",
