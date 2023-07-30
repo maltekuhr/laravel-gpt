@@ -40,7 +40,7 @@ class ErrorPatternFoundException extends Exception
                     return $message->functionCall != null;
                 })
             ),
-            'errors' => Arr::last($this->messages)['errors']
+            'errors' => Arr::last($this->messages)->content['errors']
         ];
     }
 }
