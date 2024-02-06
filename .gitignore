@@ -3,3 +3,5 @@
 /.idea
 .env
 .composer.lock
+composer.lock
+phpunit.xml.bak

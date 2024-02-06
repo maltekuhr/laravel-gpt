@@ -51,7 +51,7 @@ class GPTServiceProvider extends BaseServiceProvider implements DeferrableProvid
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../../config/laravel-gpt.php' => config_path('laravel-gpt.php'),
-            ], 'public');
+            ], 'config');
 
             $this->commands([
                 GPTFunctionMakeCommand::class,
