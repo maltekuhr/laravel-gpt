@@ -26,6 +26,9 @@ jobs:
           - laravel: 10.*
             testbench: 8.*
 
+          - laravel: 11.*
+            testbench: 9.*
+
         exclude:
             # PHP 8.2 requires Laravel 9.33 at least, so skip lowest
           - laravel: 9.*
