@@ -24,8 +24,8 @@
         "openai-php/client": "^0.8.4"
     },
     "require-dev": {
-        "orchestra/testbench": "^8.5|^9.x-dev",
-        "phpunit/phpunit": "^9.0"
+        "orchestra/workbench": "^8.5|9.x-dev",
+        "phpunit/phpunit": "^9.0|^10|^11"
     },
     "autoload": {
         "psr-4": {
