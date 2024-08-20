@@ -1,8 +1,8 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService\RuleConverters;
+namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverters;
 
-use MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService\RuleConverterTestCase;
+use MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverterTestCase;
 use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
 use Throwable;
 

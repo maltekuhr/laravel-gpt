@@ -42,7 +42,7 @@ class ChatPayloadGenerator
         return array_filter([
             'model' => $this->chat->model(),
             'messages' => self::getMessages(),
-            'functions' => self::getFunctions(),
+            'tools' => self::getTools(),
             'function_call' => self::getFunctionCall(),
             'temperature' => $this->chat->temperature(),
             'max_tokens' => $this->chat->maxTokens(),
@@ -76,7 +76,7 @@ class ChatPayloadGenerator
      *
      * @return array|null
      */
-    protected function getFunctions(): ?array
+    protected function getTools(): ?array
     {
         // handle if function call is null or []
         if ($this->chat->functions() == null) {
@@ -94,9 +94,17 @@ class ChatPayloadGenerator
         }
 
         // generate docs for functions
-        return array_map(function (GPTFunction $function): array {
-            return FunctionManager::make($function)->docs();
+        $functions = array_map(function (GPTFunction $function): array {
+            return [
+                'type' => 'function',
+                'function' => FunctionManager::make($function)->docs()
+            ];
         }, $functions);
+
+        // return tools
+        return [
+            ...$functions
+        ];
     }
 
     /**

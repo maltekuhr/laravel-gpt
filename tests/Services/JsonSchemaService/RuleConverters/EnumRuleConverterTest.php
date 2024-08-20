@@ -1,9 +1,9 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService\RuleConverters;
+namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverters;
 
 use Illuminate\Validation\Rules\Enum;
-use MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService\RuleConverterTestCase;
+use MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverterTestCase;
 use MalteKuhr\LaravelGPT\Tests\Support\Enums\IntegerEnum;
 use MalteKuhr\LaravelGPT\Tests\Support\Enums\StringEnum;
 use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;

@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService;
+namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService;
 
 use MalteKuhr\LaravelGPT\Managers\FunctionManager;
 use MalteKuhr\LaravelGPT\Tests\Support\TestGPTFunction;

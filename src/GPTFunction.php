@@ -3,7 +3,7 @@
 namespace MalteKuhr\LaravelGPT;
 
 use Closure;
-use MalteKuhr\LaravelGPT\Managers\FunctionManager;
+use MalteKuhr\LaravelGPT\Facades\FunctionManager;
 
 abstract class GPTFunction
 {

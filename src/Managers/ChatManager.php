@@ -2,214 +2,102 @@
 
 namespace MalteKuhr\LaravelGPT\Managers;
 
-use Illuminate\Support\Arr;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
+use MalteKuhr\LaravelGPT\Events\ChatUpdated;
 use MalteKuhr\LaravelGPT\Exceptions\GPTChat\ErrorPatternFoundException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTChat\NoFunctionCallException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallDecodingException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
 use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
-use MalteKuhr\LaravelGPT\Facades\OpenAI;
-use MalteKuhr\LaravelGPT\Generators\ChatPayloadGenerator;
+use MalteKuhr\LaravelGPT\Facades\FunctionManager;
 use MalteKuhr\LaravelGPT\GPTChat;
-use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\Models\ChatMessage;
-use OpenAI\Exceptions\TransporterException;
-use OpenAI\Responses\Chat\CreateResponseMessage;
+use MalteKuhr\LaravelGPT\Contracts\Driver;
+use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
+use MalteKuhr\LaravelGPT\Enums\FunctionCallStatus;
+use MalteKuhr\LaravelGPT\Contracts\ChatMessagePart;
+
+use Exception;
 
 class ChatManager
 {
     /**
-     * @param GPTChat $chat
-     */
-    protected function __construct(
-        protected GPTChat $chat
-    ) {}
-
-    /**
-     * @param GPTChat $chat
-     * @return self
-     */
-    public static function make(GPTChat $chat): self
-    {
-        return new self($chat);
-    }
-
-    /**
-     * Sends the current conversation against the OpenAI Chat Completion API.
+     * Sends the current conversation using the appropriate driver.
      *
+     * @param GPTChat $chat
      * @return GPTChat
      * @throws FunctionCallRequiresFunctionsException
      * @throws MissingFunctionException
-     * @throws TransporterException
      * @throws ErrorPatternFoundException
+     * @throws Exception
      */
-    public function send(): GPTChat
+    public function send(GPTChat $chat, int $rotation = 0): GPTChat
     {
-        // listen sending hook
-        if (!$this->chat->sending()) {
-            return $this->chat;
+        // Listen sending hook
+        if (method_exists($chat, 'sending') && !$chat->sending()) {
+            return $chat;
         }
 
-        // send chat completion request
-        $answer = OpenAI::chat()->create(
-            $payload = ChatPayloadGenerator::make($this->chat)->generate()
-        )->choices[0]->message;
+        $model = $chat->model();
+        $modelConfig = config('laravel-gpt.models')[$model] ?? null;
 
-        // handle the response
-        self::handleResponse($answer);
-
-        // listen received hook
-        if (!$this->chat->received()) {
-            return $this->chat;
+        if (!$modelConfig) {
+            throw new Exception("Model '{$model}' not found in configuration.");
         }
 
-        // check if function call is different then expected
-        if (isset($payload['function_call']) && $answer->functionCall?->name !== $payload['function_call']['name'] && !in_array($payload['function_call']['name'], ['auto', 'none'])) {
-            // handle wrong or missing function call
-            return $this->handleWrongFunctionCall($payload);
+        $connection = app("laravel-gpt.{$modelConfig['connection']}");
+
+        if (!$connection instanceof Driver) {
+            throw new Exception("Invalid driver for connection '{$modelConfig['connection']}'.");
         }
 
-        // handle next steps
-        $latestMessage = $this->chat->latestMessage();
-        if ($latestMessage->role == ChatRole::ASSISTANT && $latestMessage->functionCall != null) {
-            return self::handleFunctionCall($latestMessage);
-        } else {
-            return $this->chat;
-        }
-    }
-
-    protected function handleWrongFunctionCall(array $payload): GPTChat
-    {
-        // throw exception if model hasn't changed answer after feedback
-        if (Arr::first($this->chat->messages, fn (ChatMessage $message) => $message->role == ChatRole::FUNCTION && $message->content == NoFunctionCallException::modelMessage())) {
-            throw NoFunctionCallException::create();
-        }
-
-        // provide feedback to model
-        $this->chat->addMessage(
-            ChatMessage::from(
-                role: ChatRole::FUNCTION,
-                content: NoFunctionCallException::modelMessage(),
-                name: $payload['function_call']['name']
-            )
+        // Send chat completion request
+        $connection->run(
+            chat: $chat,
+            streamChat: function (GPTChat $latestChat) use ($chat) {
+                $chat = $latestChat;
+                ChatUpdated::dispatch($chat);
+                $this->handleLatestMessage($chat);
+            },
         );
 
-        return $this->send();
+        // check if all function calls are complete
+        $functionCalls = array_filter($chat->latestMessage()->parts, fn (ChatMessagePart $part) => $part instanceof ChatFunctionCall);
+        $allComplete = count(array_filter($functionCalls, fn (ChatFunctionCall $functionCall) => !in_array($functionCall->status, [FunctionCallStatus::COMPLETED, FunctionCallStatus::ERROR]))) == 0;
+
+        if (count($functionCalls) > 0 && $allComplete) {
+            if ($rotation >= config('laravel-gpt.max-rotations')) {
+                throw new Exception("Maximum number of function call in one rotation reached. Check max_rotations in your config.");
+            }
+
+            return $this->send($chat, rotation: $rotation + 1);
+        }
+
+        return $chat;
     }
 
     /**
-     * Handles the response from the OpenAI Chat Completion API.
+     * Handles the latest message in the chat.
      *
-     * @param CreateResponseMessage $answer
+     * @param GPTChat $chat
      * @return void
      */
-    protected function handleResponse(CreateResponseMessage $answer): void
+    protected function handleLatestMessage(GPTChat $chat): void
     {
-        try {
-            $this->chat->addMessage(
-                ChatMessage::fromResponseMessage($answer)
-            );
-        } catch (FunctionCallDecodingException $exception) {
-            $this->chat->addMessage(
-                ChatMessage::from(
-                    role: ChatRole::ASSISTANT,
-                    content: json_encode($answer->functionCall)
-                )
-            );
+        $latestMessage = $chat->latestMessage();
 
-            $this->chat->addMessage(
-                ChatMessage::from(
-                    role: ChatRole::FUNCTION,
-                    content: [
-                        'errors' => $exception->getMessage()
-                    ],
-                    name: $answer->functionCall->name
-                )
-            );
-        }
-    }
+        $newFunctionCalls = array_filter($latestMessage->parts, function (ChatMessagePart $part) {
+            return $part instanceof ChatFunctionCall && $part->status === FunctionCallStatus::NEW;
+        });
 
-    /**
-     * Executes the function call from the OpenAI Chat Completion API and
-     * adds the result to the conversation. If possible, the conversation
-     * will be continued.
-     *
-     * @param ChatMessage $answer
-     * @return GPTChat
-     * @throws ErrorPatternFoundException
-     * @throws TransporterException
-     * @throws MissingFunctionException
-     * @throws FunctionCallRequiresFunctionsException
-     */
-    protected function handleFunctionCall(ChatMessage $answer): GPTChat
-    {
-        // get the object of the function
-        $function = Arr::first(
-            array: $this->chat->functions(),
-            callback: fn (GPTFunction $function) => $function->name() == $answer->functionCall->name
-        );
+        foreach ($newFunctionCalls as $functionCall) {
+            $index = array_search($functionCall, $latestMessage->parts);
 
-        // make sure that the function exists
-        if ($function == null) {
-            $this->chat->addMessage(
-                ChatMessage::from(
-                    role: ChatRole::FUNCTION,
-                    content: [
-                        'errors' => 'Function not found.'
-                    ],
-                    name: $answer->functionCall->name
-                )
-            );
+            $chat->replaceLatest($latestMessage->replacePart(
+                index: $index,
+                part: $functionCall->updateStatus(FunctionCallStatus::PENDING)
+            ));
 
-            return $this->chat;
-        }
-
-        // call function and add result to conversation
-        $this->chat->addMessage(
-            FunctionManager::make($function)->call($answer->functionCall->arguments)
-        );
-
-        // check if function returned two times the same validation errors
-        self::noErrorPatternExits();
-
-        // make sure that the next request isn't the same
-        $isForced = get_class($function) == $this->chat->functionCall();
-
-        // check if function has response
-        $hasResponse = $this->chat->latestMessage()->content !== null;
-
-        // check if function response has errors
-        $hasErrors = isset($this->chat->latestMessage()->content['errors']);
-
-        // check if function call
-        if ((!$isForced && $hasResponse) || $hasErrors) {
-            // proceed in conversation with model
-            return self::send();
-        } else {
-            return $this->chat;
-        }
-    }
-
-    /**
-     * This function ensures that the last two function calls don't return
-     * the same validation errors. Usually this means that OpenAI is stuck
-     * in a loop and can't proceed in the conversation. Proceeding would
-     * like lead to the same validation errors again. Exception will be
-     * thrown to inform the developer that the prompt or documentation
-     * need to be improved.
-     */
-    protected function noErrorPatternExits(): void
-    {
-        // get last two function responses
-        $messages = collect($this->chat->messages)
-            ->filter(fn (ChatMessage $message) => $message->role == ChatRole::FUNCTION)
-            ->take(-2)
-            ->filter(fn (ChatMessage $message) => isset($message->content['errors']));
-
-        // check if both messages are the same
-        if ($messages->count() == 2 && $messages->first()->content == $messages->last()->content) {
-            throw ErrorPatternFoundException::create($this->chat->messages);
+            $chat->replaceLatest($latestMessage->replacePart(
+                index: $index,
+                part: FunctionManager::call($chat, $functionCall)
+            ));
         }
     }
 }

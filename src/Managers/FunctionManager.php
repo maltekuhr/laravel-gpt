@@ -7,56 +7,48 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\SerializableClosure\Support\ReflectionClosure;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
+use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
+use Exception;
+use MalteKuhr\LaravelGPT\Enums\SchemaType;
+use MalteKuhr\LaravelGPT\GPTAction;
+use MalteKuhr\LaravelGPT\GPTChat;
 use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\Models\ChatMessage;
-use MalteKuhr\LaravelGPT\Services\JsonSchemaService\JsonSchemaService;
+use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
+use MalteKuhr\LaravelGPT\Services\SchemaService\SchemaService;
 use ReflectionClass;
 
 class FunctionManager
 {
     /**
-     * @param GPTFunction $function
-     */
-    protected function __construct(
-        protected GPTFunction $function
-    ) {}
-
-    /**
-     * @param GPTFunction $function
-     * @return self
-     */
-    public static function make(GPTFunction $function): self
-    {
-        return new self($function);
-    }
-
-    /**
      * Generates the documentation for the function.
      *
+     * @param GPTFunction $function
+     * @param SchemaType $schemaType
      * @return array
      */
-    public function docs(): array
+    public function docs(GPTFunction $function, SchemaType $schemaType): array
     {
-        $schema = self::generateSchema();
+        $schema = $this->generateSchema($function, $schemaType);
 
         return [
-            'name' => $this->function->name(),
+            'name' => $function->name(),
             'parameters' => collect($schema)->toArray(),
-            'description' => $this->function->description()
+            'description' => $function->description()
         ];
     }
 
     /**
      * Generates the json schema for the function.
      *
+     * @param GPTFunction $function
+     * @param SchemaType $schemaType
      * @return array
      */
-    protected function generateSchema(): array
+    protected function generateSchema(GPTFunction $function, SchemaType $schemaType): array
     {
-        $schema = JsonSchemaService::convert($this->function->rules());
+        $schema = SchemaService::convert($function->rules(), $schemaType);
 
-        $reflection = new ReflectionClosure($this->function->function());
+        $reflection = new ReflectionClosure($function->function());
         foreach ($reflection->getParameters() as $parameter) {
             if (!$parameter->isDefaultValueAvailable() && !$parameter->allowsNull()) {
                 $schema['required'] = array_unique([...$schema['required'], $parameter->getName()]);
@@ -69,43 +61,47 @@ class FunctionManager
     /**
      * Calls the function and validates the arguments.
      *
-     * @param array $arguments
-     * @return ChatMessage
+     * @param GPTChat $chat
+     * @param ChatFunctionCall $functionCall
+     * @return ChatFunctionCall
      */
-    public function call(array $arguments): ChatMessage
+    public function call(GPTChat $chat, ChatFunctionCall $functionCall): ChatFunctionCall
     {
-        try {
-            self::validate($arguments);
+        $function = Arr::first($chat->functions() ?? [], function(GPTFunction $function) use ($functionCall) {
+            return $function->name() === $functionCall->name;
+        });
 
-            $arguments = $this->getFilteredArguments($arguments);
-
-            $content = call_user_func_array(
-                callback: $this->function->function(),
-                args: $arguments
-            );
-        } catch (ValidationException $exception) {
-            $content = [
-                'errors' => Arr::flatten($exception->errors())
-            ];
+        if (!$function) {
+            throw new Exception('Function not found');
         }
 
-        return ChatMessage::from(
-            role: ChatRole::FUNCTION,
-            content: $content,
-            name: $this->function->name()
-        );
+        try {
+            $this->validate($function, $functionCall->arguments);
+
+            $arguments = $this->getFilteredArguments($function, $functionCall->arguments);
+
+            $content = call_user_func_array(
+                callback: $function->function(),
+                args: $arguments
+            );
+        } catch (Exception $exception) {
+            return $functionCall->handleException($exception);
+        }
+
+        return $functionCall->setResponse($content);
     }
 
     /**
      * Validates the given input against the rules of the given GPTFunction.
      *
+     * @param GPTFunction $function
      * @param array $input
      * @return array
      */
-    protected function validate(array $input): array
+    protected function validate(GPTFunction $function, array $input): array
     {
         $validator = Validator::make(
-            $input, $this->function->rules(), $this->function->messages()
+            $input, $function->rules(), $function->messages()
         );
 
         if ($validator->fails()) {
@@ -120,22 +116,24 @@ class FunctionManager
     /**
      * Removes all arguments which can't be passed to the function.
      *
+     * @param GPTFunction $function
      * @param array $arguments
      * @return array
      */
-    protected function getFilteredArguments(array $arguments): array
+    protected function getFilteredArguments(GPTFunction $function, array $arguments): array
     {
-        $parameters = (new ReflectionClosure($this->function->function()))->getParameters();
+        $parameters = (new ReflectionClosure($function->function()))->getParameters();
         return Arr::only($arguments, Arr::pluck($parameters, 'name'));
     }
 
     /**
      * Extracts the function name from the class name for a given GPTFunction.
      *
+     * @param GPTFunction|GPTAction $function
      * @param array $parts
      * @return string
      */
-    public static function getFunctionName($function, array $parts = ['GPT', 'Function']): string
+    public function getFunctionName(GPTFunction|GPTAction $function, array $parts = ['GPT', 'Function']): string
     {
         $name = (new ReflectionClass(get_class($function)))->getShortName();
 

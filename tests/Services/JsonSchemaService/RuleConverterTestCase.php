@@ -1,8 +1,8 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\JsonSchemaService;
+namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService;
 
-use MalteKuhr\LaravelGPT\Services\JsonSchemaService\JsonSchemaService;
+use MalteKuhr\LaravelGPT\Services\SchemaService\JsonSchemaService;
 use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
 use MalteKuhr\LaravelGPT\Tests\TestCase;
 use Throwable;
