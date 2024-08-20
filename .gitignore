@@ -1,7 +1,8 @@
 /vendor
-.phpunit.result.cache
+/.phpunit.cache
 /.idea
 .env
 .composer.lock
 composer.lock
-phpunit.xml.bak.phpunit.cache/test-results
+phpunit.xml.bak
+.phpunit.result.cache
