@@ -4,4 +4,4 @@
 .env
 .composer.lock
 composer.lock
-phpunit.xml.bak
+phpunit.xml.bak.phpunit.cache/test-results
