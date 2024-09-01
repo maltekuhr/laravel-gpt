@@ -2,10 +2,10 @@
 
 namespace MalteKuhr\LaravelGPT\Enums;
 
-enum ChatRole: string
+enum ChatType: string
 {
-    case ASSISTANT = 'assistant';
-    case USER = 'user';
+    case CHAT = 'chat';
+    case ACTION = 'action';
 
     /**
      * Get an array of all enum names.

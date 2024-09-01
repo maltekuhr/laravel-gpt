@@ -27,8 +27,14 @@ class ChatManager
      * @throws ErrorPatternFoundException
      * @throws Exception
      */
-    public function send(GPTChat $chat, int $rotation = 0): GPTChat
+    public function send(GPTChat $chat, int $rotation = 0, bool $sync = false): GPTChat
     {
+        if (!$sync) {
+            dispatch(fn () => $this->send($chat, $rotation, true));
+
+            return $chat;
+        }
+
         // Listen sending hook
         if (method_exists($chat, 'sending') && !$chat->sending()) {
             return $chat;
@@ -86,6 +92,7 @@ class ChatManager
             return $part instanceof ChatFunctionCall && $part->status === FunctionCallStatus::NEW;
         });
 
+        /** @var ChatFunctionCall $functionCall */
         foreach ($newFunctionCalls as $functionCall) {
             $index = array_search($functionCall, $latestMessage->parts);
 

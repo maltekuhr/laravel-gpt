@@ -2,90 +2,18 @@
 
 namespace MalteKuhr\LaravelGPT;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use MalteKuhr\LaravelGPT\Concerns\HasChat;
+use MalteKuhr\LaravelGPT\Concerns\HasGPTChat;
 use MalteKuhr\LaravelGPT\Enums\ChatStatus;
 use MalteKuhr\LaravelGPT\Helper\Dir;
 use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
 use MalteKuhr\LaravelGPT\Facades\ChatManager;
-use MalteKuhr\LaravelGPT\Jobs\RunChatJob;
+use MalteKuhr\LaravelGPT\Contracts\Chatable;
 
-class GPTChat extends Model
+class GPTChat implements Chatable
 {
-    use HasChat;
+    use HasGPTChat;
     use Dir;
-    use SoftDeletes;
 
-    protected $guarded = [];
-
-    protected $table = 'gpt_chats';
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'messages' => 'array',
-    ];
-
-    /**
-     * Add a message to the chat.
-     *
-     * @param ChatMessage $message
-     * @return $this
-     */
-    public function addMessage(ChatMessage $message): self
-    {
-        $messages = $this->getMessages();
-        $messages[] = $message;
-        $this->setMessages($messages);
-        
-        return $this;
-    }
-
-    /**
-     * Get the messages for the chat.
-     *
-     * @return array
-     */
-    public function getMessages(): array
-    {
-        return array_map(function ($message) {
-            return ChatMessage::fromArray($message);
-        }, $this->getAttribute('messages') ?? []);
-    }
-
-    /**
-     * Set the messages for the chat.
-     *
-     * @param array $messages
-     * @return $this
-     */
-    public function setMessages(array $messages): self
-    {
-        $this->setAttribute('messages', array_map(function ($message) {
-            return $message instanceof ChatMessage ? $message->toArray() : $message;
-        }, $messages));
-
-        $this->save();
-
-        return $this;
-    }
-
-    /**
-     * Start a new chat with the given message.
-     * 
-     * @param ChatMessage $message
-     * @return static
-     */
-    public static function start(ChatMessage $message): static
-    {
-        return (new static([
-            'class' => static::class,
-        ]))->addMessage($message);
-    }
 
     /**
      * Get the system message for the assistant.
@@ -156,40 +84,16 @@ class GPTChat extends Model
      * 
      * @return void
      */
-    public function run(): void
+    public function run(bool $sync = false): mixed
     {
-        $this->status = ChatStatus::RUNNING;
-        $this->save();
-
-        RunChatJob::dispatch($this);
-    }
-
-    /**
-     * Get the latest message from the chat.
-     * 
-     * @return ChatMessage|null
-     */
-    public function latestMessage(): ?ChatMessage
-    {
-        $messages = $this->getMessages();
-        return count($messages) > 0 ? end($messages) : null;
-    }
-
-    /**
-     * Replace the latest message in the chat.
-     * 
-     * @param ChatMessage $message The new message to replace the latest one
-     * @return $this
-     */
-    public function replaceLatest(ChatMessage $message): self
-    {
-        $messages = $this->getMessages();
-        if (!empty($messages)) {
-            array_pop($messages);
-            $messages[] = $message;
-            $this->setMessages($messages);
+        if ($sync) {
+            return ChatManager::send($this);
+        } else {
+            dispatch(fn () => ChatManager::send($this));
+            $this->attributes['status'] = ChatStatus::RUNNING;
         }
-        return $this;
     }
+
+
 
 }

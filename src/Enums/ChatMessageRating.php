@@ -4,8 +4,8 @@ namespace MalteKuhr\LaravelGPT\Enums;
 
 enum ChatRole: string
 {
-    case ASSISTANT = 'assistant';
-    case USER = 'user';
+    case POSITIVE = 'positive';
+    case NEGATIVE = 'negative';
 
     /**
      * Get an array of all enum names.

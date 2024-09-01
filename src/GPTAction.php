@@ -2,7 +2,9 @@
 
 namespace MalteKuhr\LaravelGPT;
 use Closure;
-use MalteKuhr\LaravelGPT\Managers\FunctionManager;
+use MalteKuhr\LaravelGPT\Facades\FunctionManager;
+use MalteKuhr\LaravelGPT\Facades\ChatManager;
+use MalteKuhr\LaravelGPT\Enums\ChatStatus;
 
 abstract class GPTAction extends GPTChat
 {
@@ -87,5 +89,15 @@ abstract class GPTAction extends GPTChat
     public function functionCall(): bool
     {
         return true;
+    }
+
+    /**
+     * Run the action.
+     * 
+     * @return void
+     */
+    public function run(bool $sync = false): mixed
+    {
+        
     }
 }

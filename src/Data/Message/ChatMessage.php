@@ -13,10 +13,12 @@ class ChatMessage
     /**
      * @param ChatRole $role
      * @param ChatMessagePart[] $parts = []
+     * @param int|null $id
      */
     public function __construct(
         public readonly ChatRole $role,
-        public readonly array $parts = []
+        public readonly array $parts = [],
+        public readonly ?int $id = null,
     ) {}
 
     /**
@@ -27,6 +29,7 @@ class ChatMessage
     public function toArray(): array
     {
         return [
+            'id' => $this->id ?? null,
             'role' => $this->role->value,
             'parts' => array_map(function ($part) {
                 return [
@@ -51,6 +54,7 @@ class ChatMessage
     public static function fromArray(array $data): static
     {
         return new static(
+            id: $data['id'] ?? null,
             role: ChatRole::from($data['role']),
             parts: array_map(function ($partData) {
                 return match ($partData['type']) {
