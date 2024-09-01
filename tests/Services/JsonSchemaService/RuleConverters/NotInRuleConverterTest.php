@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverters;
 
 use Illuminate\Validation\Rule;
-use MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverterTestCase;
-use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
+use MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverterTestCase;
+use MalteKuhr\LaravelGpt\Tests\Support\TestSchema;
 use Throwable;
 
 class NotInRuleConverterTest extends RuleConverterTestCase

@@ -1,8 +1,8 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Contracts;
+namespace MalteKuhr\LaravelGpt\Contracts;
 
-use MalteKuhr\LaravelGPT\GPTChat;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
 use Closure;
 
 interface Driver
@@ -17,10 +17,10 @@ interface Driver
     /**
      * Run the AI model with the given chat.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @param Closure|null $streamChat
      * 
      * @return void
      */
-    public function run(GPTChat $chat, ?Closure $streamChat = null): void;
+    public function run(BaseChat $chat, ?Closure $streamChat = null): void;
 }

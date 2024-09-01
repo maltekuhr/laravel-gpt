@@ -1,12 +1,12 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverters;
 
 use Illuminate\Validation\Rules\Enum;
-use MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverterTestCase;
-use MalteKuhr\LaravelGPT\Tests\Support\Enums\IntegerEnum;
-use MalteKuhr\LaravelGPT\Tests\Support\Enums\StringEnum;
-use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
+use MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverterTestCase;
+use MalteKuhr\LaravelGpt\Tests\Support\Enums\IntegerEnum;
+use MalteKuhr\LaravelGpt\Tests\Support\Enums\StringEnum;
+use MalteKuhr\LaravelGpt\Tests\Support\TestSchema;
 use Throwable;
 
 class EnumRuleConverterTest extends RuleConverterTestCase

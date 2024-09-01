@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService\Converters\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters;
 
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
-use MalteKuhr\LaravelGPT\Exceptions\SchemaService\InvalidFormatException;
-use MalteKuhr\LaravelGPT\Services\SchemaService\Converters\AbstractRuleConverter;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\Exceptions\SchemaService\InvalidFormatException;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\AbstractRuleConverter;
 
 class BeforeRuleConverter extends AbstractRuleConverter
 {

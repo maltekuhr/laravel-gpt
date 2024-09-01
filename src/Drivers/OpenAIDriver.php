@@ -1,27 +1,28 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Drivers;
+namespace MalteKuhr\LaravelGpt\Drivers;
 
 use Closure;
-use MalteKuhr\LaravelGPT\Contracts\Driver;
-use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFile;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFileUrl;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatText;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
-use MalteKuhr\LaravelGPT\Facades\FunctionManager;
-use MalteKuhr\LaravelGPT\GPTChat;
-use MalteKuhr\LaravelGPT\GPTFunction;
+use MalteKuhr\LaravelGpt\Contracts\Driver;
+use MalteKuhr\LaravelGpt\Data\Message\ChatMessage;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFile;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFileUrl;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatText;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\Exceptions\GptFunction\FunctionCallRequiresFunctionsException;
+use MalteKuhr\LaravelGpt\Exceptions\GptFunction\MissingFunctionException;
+use MalteKuhr\LaravelGpt\Facades\FunctionManager;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
+use MalteKuhr\LaravelGpt\GptFunction;
 use Illuminate\Support\Arr;
 use OpenAI\Responses\StreamResponse;
+use MalteKuhr\LaravelGpt\GPTChat;
 use Exception;
 use OpenAI;
 use OpenAI\Client;
-use MalteKuhr\LaravelGPT\Contracts\ChatMessagePart;
+use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
 
 class OpenAIDriver implements Driver
 {
@@ -57,16 +58,16 @@ class OpenAIDriver implements Driver
     }
 
     /**
-     * Run the chat and return the updated GPTChat instance.
+     * Run the chat and return the updated BaseChat instance.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @param Closure|null $streamChat
      * @return void
      */
-    public function run(GPTChat $chat, ?Closure $streamChat = null): void
+    public function run(BaseChat $chat, ?Closure $streamChat = null): void
     {
         $payload = $this->generatePayload($chat);
-        
+
         $stream = $this->client->chat()->createStreamed($payload);
 
         $this->handleResponse($chat, $stream, $streamChat);   
@@ -75,12 +76,12 @@ class OpenAIDriver implements Driver
     /**
      * Generate the payload for the OpenAI API request.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array
      * @throws FunctionCallRequiresFunctionsException
      * @throws MissingFunctionException
      */
-    protected function generatePayload(GPTChat $chat): array
+    protected function generatePayload(BaseChat $chat): array
     {
         $tools = $this->getTools($chat);
 
@@ -91,7 +92,8 @@ class OpenAIDriver implements Driver
             'max_tokens' => $chat->maxTokens(),
             ...(count($tools) > 0 ? [
                 'tools' => $tools,
-                'tools_choice' => $this->getToolChoice($chat),
+                'tool_choice' => $this->getToolChoice($chat),
+                'parallel_tool_calls' => $chat instanceof GptChat,
             ] : []),
         ], fn ($value) => $value !== null);
     }
@@ -99,10 +101,10 @@ class OpenAIDriver implements Driver
     /**
      * Convert chat messages to OpenAI format.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array
      */
-    protected function getMessages(GPTChat $chat): array
+    protected function getMessages(BaseChat $chat): array
     {
         $messagesPayload = [];
 
@@ -175,16 +177,16 @@ class OpenAIDriver implements Driver
     /**
      * Get the tools for the OpenAI API request.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array|null
      */
-    protected function getTools(GPTChat $chat): ?array
+    protected function getTools(BaseChat $chat): ?array
     {
         if ($chat->functions() === null) {
             return null;
         }
 
-        return array_map(function (GPTFunction $function): array {
+        return array_map(function (GptFunction $function): array {
             return [
                 'type' => 'function',
                 'function' => FunctionManager::docs($function, SchemaType::JSON)
@@ -195,21 +197,25 @@ class OpenAIDriver implements Driver
     /**
      * Get the tool choice for the OpenAI API request.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return string|array|null
      * @throws MissingFunctionException
      * @throws FunctionCallRequiresFunctionsException
      */
-    protected function getToolChoice(GPTChat $chat): string|array|null
+    protected function getToolChoice(BaseChat $chat): string|array|null
     {
         if ($chat->functionCall() === null) {
-            return null;
+            return 'auto';
         }
 
-        if (is_subclass_of($chat->functionCall(), GPTFunction::class)) {
+        if (is_array($chat->functionCall())) {
+            throw new Exception("The function call is an array. This is not supported by the OpenAI driver.");
+        }
+
+        if (is_subclass_of($chat->functionCall(), GptFunction::class)) {
             $function = Arr::first(
                 array: $chat->functions(),
-                callback: fn (GPTFunction $function) => $function instanceof ($chat->functionCall())
+                callback: fn (GptFunction $function) => $function instanceof ($chat->functionCall())
             );
 
             if ($function === null) {
@@ -226,18 +232,18 @@ class OpenAIDriver implements Driver
             throw FunctionCallRequiresFunctionsException::create();
         }
 
-        return $chat->functionCall() ? 'auto' : 'none';
+        return $chat->functionCall() ? 'required' : 'none';
     }
 
     /**
      * Handle the response from the OpenAI API.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @param StreamResponse $stream
      * @param Closure|null $streamChat
-     * @return GPTChat
+     * @return void
      */
-    protected function handleResponse(GPTChat $chat, StreamResponse $stream, ?Closure $streamChat = null): void
+    protected function handleResponse(BaseChat $chat, StreamResponse $stream, ?Closure $streamChat = null): void
     {
         $messages = $chat->getMessages();
         $message = new ChatMessage(
@@ -265,7 +271,7 @@ class OpenAIDriver implements Driver
                 // update chat message every 250 ms
                 if (microtime(true) - $contentLastChangedAt >= 0.1 && $currentPart->text != '') {
                     $contentLastChangedAt = microtime(true);
-                    $chat = $chat->setMessages([...$messages, $message->addPart($currentPart)]);
+                    $chat->addMessage($message->addPart($currentPart));
                     if ($streamChat !== null) {
                         $streamChat($chat);
                     }
@@ -279,7 +285,7 @@ class OpenAIDriver implements Driver
                     // Check if ID has changed
                     if (!is_null($currentPart) && (!($currentPart instanceof ChatFunctionCall) || $id !== $currentPart->id)) {
                         $message = $message->addPart($currentPart);
-                        $chat = $chat->setMessages([...$messages, $message]);
+                        $chat->addMessage($message);
                         
                         if ($streamChat !== null) {
                             $streamChat($chat);
@@ -322,7 +328,7 @@ class OpenAIDriver implements Driver
         // Add the last part if it exists
         if ($currentPart !== null) {
             $message = $message->addPart($currentPart);
-            $chat = $chat->setMessages([...$messages, $message]);
+            $chat->addMessage($message);
             $streamChat($chat);
         }
     }

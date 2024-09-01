@@ -1,17 +1,15 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Models;
+namespace MalteKuhr\LaravelGpt\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Data\Message\ChatMessage;
 
-class GPTChatMessage extends Model
+class GptChatMessage extends Model
 {
-    use SoftDeletes;
-
     protected $guarded = [];
 
     protected $table = 'gpt_chat_messages';
@@ -33,11 +31,11 @@ class GPTChatMessage extends Model
      */
     public function chat(): BelongsTo
     {
-        return $this->belongsTo(GPTChat::class, 'chat_id');
+        return $this->belongsTo(GptChat::class, 'chat_id');
     }
 
     /**
-     * Convert the GPTChatMessage to a ChatMessage.
+     * Convert the GptChatMessage to a ChatMessage.
      *
      * @return ChatMessage
      */
@@ -50,7 +48,7 @@ class GPTChatMessage extends Model
     }
 
     /**
-     * Create a GPTChatMessage from a ChatMessage.
+     * Create a GptChatMessage from a ChatMessage.
      *
      * @param ChatMessage $chatMessage
      * @return static

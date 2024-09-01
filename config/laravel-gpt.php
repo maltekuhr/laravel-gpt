@@ -1,6 +1,6 @@
 <?php
 
-use MalteKuhr\LaravelGPT\Services\SchemaService\Converters\RuleConverters\{
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\{
     AcceptedIfRuleConverter,
     AcceptedRuleConverter,
     AfterOrEqualRuleConverter,
@@ -37,7 +37,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | The default model used in the requests against the OpenAI API. You can
-    | override the model in the GPTAction and GPTChat using the `model()`
+    | override the model in the GptAction and GptChat using the `model()`
     | method.
     */
 
@@ -106,7 +106,7 @@ return [
     |
     | When possible, the chat will try to force the model to send a message.
     | When this is not possible due to enforced function calling (like in
-    | GPTActions or in chats with forced function calling), the chat will
+    | GptActions or in chats with forced function calling), the chat will
     | throw an exception.
     |
     */
@@ -183,7 +183,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Rule converters are used to convert Laravel validation rules to the JSON
-    | schema format understood by GPT-3.5 and GPT-4. You can add your own rule
+    | schema format understood by Gpt-3.5 and Gpt-4. You can add your own rule
     | converters here, or remove the default ones if you don't need them.
     */
     'rules' => [

@@ -1,12 +1,12 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests;
+namespace MalteKuhr\LaravelGpt\Tests;
 
 use Illuminate\Support\Facades\Config;
-use MalteKuhr\LaravelGPT\Exceptions\ApiKeyIsMissingException;
-use MalteKuhr\LaravelGPT\Facades\OpenAI;
-use MalteKuhr\LaravelGPT\Providers\GPTServiceProvider;
-use MalteKuhr\LaravelGPT\Testing\OpenAIFake;
+use MalteKuhr\LaravelGpt\Exceptions\ApiKeyIsMissingException;
+use MalteKuhr\LaravelGpt\Facades\OpenAI;
+use MalteKuhr\LaravelGpt\Providers\GptServiceProvider;
+use MalteKuhr\LaravelGpt\Testing\OpenAIFake;
 use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Chat\CreateResponse;
 use Orchestra\Testbench\TestCase;
@@ -23,7 +23,7 @@ class SetupTest extends TestCase
 
         Config::set('laravel-gpt.api_key', 'test');
 
-        (new GPTServiceProvider($this->app))->register();
+        (new GptServiceProvider($this->app))->register();
     }
 
     public function testIfApiKeyIsRequired()

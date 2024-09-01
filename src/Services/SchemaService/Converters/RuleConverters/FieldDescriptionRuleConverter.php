@@ -1,9 +1,9 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService\Converters\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters;
 
-use MalteKuhr\LaravelGPT\Services\SchemaService\Converters\AbstractRuleConverter;
-use MalteKuhr\LaravelGPT\Services\SchemaService\CustomRules\FieldDescription;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\AbstractRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\CustomRules\FieldDescription;
 
 ;
 

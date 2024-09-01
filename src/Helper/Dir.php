@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Helper;
+namespace MalteKuhr\LaravelGpt\Helper;
 
 trait Dir
 {

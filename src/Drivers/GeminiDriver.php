@@ -1,24 +1,22 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Drivers;
+namespace MalteKuhr\LaravelGpt\Drivers;
 
 use Closure;
-use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
-use Symfony\Component\HttpClient\Exception\ClientException;
+use MalteKuhr\LaravelGpt\Data\Message\ChatMessage;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Contracts\HttpClient\ResponseStreamInterface;
-use MalteKuhr\LaravelGPT\Contracts\Driver;
-use MalteKuhr\LaravelGPT\GPTChat;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
-use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\Facades\FunctionManager;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatText;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFile;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
+use MalteKuhr\LaravelGpt\Contracts\Driver;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\GptFunction;
+use MalteKuhr\LaravelGpt\Facades\FunctionManager;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatText;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFile;
+use MalteKuhr\LaravelGpt\Exceptions\GptFunction\MissingFunctionException;
+use MalteKuhr\LaravelGpt\Exceptions\GptFunction\FunctionCallRequiresFunctionsException;
 use Illuminate\Support\Arr;
 use Exception;
 
@@ -26,8 +24,6 @@ class GeminiDriver implements Driver
 {
     private $client;
     private string $connection;
-    private string $location;
-    private string $projectId;
     private string $apiKey;
 
     public function __construct(string $connection)
@@ -40,15 +36,12 @@ class GeminiDriver implements Driver
         $this->client = HttpClient::create();
     }
 
-    public function run(GPTChat $chat, ?Closure $streamChat = null): void
+    public function run(BaseChat $chat, ?Closure $streamChat = null): void
     {
         $model = $chat->model();
 
         $payload = $this->generatePayload($chat);
 
-        dump($payload);
-
-        $messages = $chat->getMessages();
         $message = new ChatMessage(
             role: ChatRole::ASSISTANT, 
             parts: []
@@ -64,23 +57,35 @@ class GeminiDriver implements Driver
                 'buffer' => false,
             ]);
 
-
             if ($response->getStatusCode() !== 200) {
                 $error = json_decode($response->getContent(false))[0]?->error ?? null;
                 throw new Exception("Gemini API request failed ({$response->getStatusCode()}): " . json_encode($error));
             }
 
+            $jsonBuffer = '';
             foreach ($this->client->stream($response) as $chunk) {
                 $content = $chunk->getContent();
 
-                if (preg_match('/\{(?:[^{}]|(?R))*\}/x', $content, $matches)) {
-                    $jsonData = json_decode($matches[0], true);
-                    if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['candidates'][0])) {
-                        $message = $this->handleCandidate($jsonData['candidates'][0], $originalMessage = $message, $chat, $streamChat);
-                        if ($originalMessage !== $message) {
-                            $chat = $chat->setMessages([...$messages, $message]);
-                            $streamChat($chat);
+                $jsonBuffer .= $content;
+
+                // Try to extract complete JSON objects
+                while (preg_match('/(\[?\{(?:[^{}]|(?R))*\}\]?)/x', $jsonBuffer, $matches)) {
+                    $jsonString = $matches[1];
+                    $jsonData = json_decode(trim($jsonString, '[]'), true);
+
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        if (isset($jsonData['candidates'][0])) {
+                            $message = $this->handleCandidate($jsonData['candidates'][0], $originalMessage = $message, $chat, $streamChat);
+                            if ($originalMessage !== $message) {
+                                $chat->addMessage($message);
+                                $streamChat($chat);
+                            }
                         }
+                        // Remove the processed JSON from the buffer
+                        $jsonBuffer = substr($jsonBuffer, strlen($matches[0]));
+                    } else {
+                        // If we can't parse the JSON, break and wait for more data
+                        break;
                     }
                 }
             }
@@ -89,7 +94,7 @@ class GeminiDriver implements Driver
         }
     }
 
-    protected function handleCandidate(array $candidate, ChatMessage $message, GPTChat $chat, ?Closure $streamChat = null): ChatMessage
+    protected function handleCandidate(array $candidate, ChatMessage $message, BaseChat $chat, ?Closure $streamChat = null): ChatMessage
     {
         foreach($candidate['content']['parts'] as $part) {
 
@@ -121,10 +126,10 @@ class GeminiDriver implements Driver
     /**
      * Generate the payload for the Gemini API request.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array
      */
-    protected function generatePayload(GPTChat $chat): array
+    protected function generatePayload(BaseChat $chat): array
     {
         $tools = $this->getTools($chat);
 
@@ -135,7 +140,7 @@ class GeminiDriver implements Driver
                 ]]
             ],
             'contents' => $this->getContents($chat),
-            'generation_config' => [
+            'generationConfig' => [
                 'temperature' => $chat->temperature(),
                 'maxOutputTokens' => $chat->maxTokens(),
             ],
@@ -149,10 +154,10 @@ class GeminiDriver implements Driver
     /**
      * Convert chat messages to Gemini format.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array
      */
-    protected function getContents(GPTChat $chat): array
+    protected function getContents(BaseChat $chat): array
     {
         $contents = [];
 
@@ -206,17 +211,17 @@ class GeminiDriver implements Driver
     /**
      * Get the tools for the Gemini API request.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array|null
      */
-    protected function getTools(GPTChat $chat): ?array
+    protected function getTools(BaseChat $chat): ?array
     {
         if ($chat->functions() === null) {
             return null;
         }
 
             return [
-                'functionDeclarations' => array_map(function (GPTFunction $function): array {
+                'functionDeclarations' => array_map(function (GptFunction $function): array {
                     return FunctionManager::docs($function, SchemaType::OPEN_API);
                 }, $chat->functions())
             ];
@@ -226,12 +231,12 @@ class GeminiDriver implements Driver
     /**
      * Get the tool configuration for the Gemini API request.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @return array|null
      * @throws MissingFunctionException
      * @throws FunctionCallRequiresFunctionsException
      */
-    protected function getToolConfig(GPTChat $chat): ?array
+    protected function getToolConfig(BaseChat $chat): ?array
     {
         if ($chat->functions() === null && $chat->functionCall() !== null && $chat->functionCall() !== false) {
             throw FunctionCallRequiresFunctionsException::create();
@@ -249,9 +254,12 @@ class GeminiDriver implements Driver
         } else if ($chat->functionCall() === true) {
             $config = [
                 'mode' => 'ANY',
+                'allowedFunctionNames' => array_map(function (GptFunction $function) {
+                    return $function->name();
+                }, $chat->functions()),
             ];
         } else if (is_string($chat->functionCall())) {
-            $function = array_filter($chat->functions(), fn (GPTFunction $function) => get_class($function) === $chat->functionCall())[0] ?? null;
+            $function = array_filter($chat->functions(), fn (GptFunction $function) => get_class($function) === $chat->functionCall())[0] ?? null;
 
             if ($function === null) {
                 throw MissingFunctionException::create($chat->functionCall(), get_class($chat));
@@ -259,13 +267,10 @@ class GeminiDriver implements Driver
             
             $config = [
                 'mode' => 'ANY',
-                'allowedFunctionNames' => [
-                    $function->name(),
-                ]
             ];
         } else if (is_array($chat->functionCall())) {
             $allowedFunctionNames = array_map(function ($functionClass) use ($chat) {
-                $function = Arr::first($chat->functions(), fn (GPTFunction $f) => get_class($f) === $functionClass);
+                $function = Arr::first($chat->functions(), fn (GptFunction $f) => get_class($f) === $functionClass);
                 if ($function === null) {
                     throw MissingFunctionException::create($functionClass, get_class($chat));
                 }

@@ -3,13 +3,13 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use MalteKuhr\LaravelGPT\Enums\ChatStatus;
-use MalteKuhr\LaravelGPT\Enums\ChatType;
+use MalteKuhr\LaravelGpt\Enums\ChatStatus;
+use MalteKuhr\LaravelGpt\Enums\ChatType;
 
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('gpt_chat_messages', function (Blueprint $table) {
+        Schema::create('gpt_chats', function (Blueprint $table) {
             $table->id();
 
             $table->string('class');
@@ -25,6 +25,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('gpt_chat_messages');
+        Schema::dropIfExists('gpt_chats');
     }
 };

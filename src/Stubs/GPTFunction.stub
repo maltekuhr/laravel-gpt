@@ -2,10 +2,10 @@
 
 namespace App\{NAMESPACE};
 
-use MalteKuhr\LaravelGPT\GPTFunction;
+use MalteKuhr\LaravelGpt\GptFunction;
 use Closure;
 
-class {NAME} extends GPTFunction
+class {NAME} extends GptFunction
 {
     /**
      * Specifies a function to be invoked by the model.
@@ -30,7 +30,7 @@ class {NAME} extends GPTFunction
     }
 
     /**
-     * Describes the purpose of the GPT function.
+     * Describes the purpose of the Gpt function.
      *
      * @return string
      */

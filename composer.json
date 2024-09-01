@@ -1,6 +1,6 @@
 {
     "name": "maltekuhr/laravel-gpt",
-    "description": "Streamlined integration of OpenAI's ChatGPT (GPT-3.5, GPT-4) into Laravel applications.",
+    "description": "Streamlined integration of OpenAI's ChatGpt (Gpt-3.5, Gpt-4) into Laravel applications.",
     "keywords": [
         "laravel",
 	    "openai",
@@ -30,12 +30,12 @@
     },
     "autoload": {
         "psr-4": {
-            "MalteKuhr\\LaravelGPT\\": "src"
+            "MalteKuhr\\LaravelGpt\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MalteKuhr\\LaravelGPT\\Tests\\": "tests"
+            "MalteKuhr\\LaravelGpt\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -51,7 +51,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "MalteKuhr\\LaravelGPT\\Providers\\GPTServiceProvider"
+                "MalteKuhr\\LaravelGpt\\Providers\\GptServiceProvider"
             ]
         }
     }

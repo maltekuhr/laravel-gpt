@@ -2,10 +2,10 @@
 
 namespace App\{NAMESPACE};
 
-use MalteKuhr\LaravelGPT\GPTAction;
+use MalteKuhr\LaravelGpt\GptAction;
 use Closure;
 
-class {NAME} extends GPTAction
+class {NAME} extends GptAction
 {
     /**
      * Explains what the assistant should do and which rules to follow.

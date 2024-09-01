@@ -1,26 +1,29 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Traits;
+namespace MalteKuhr\LaravelGpt\Contracts;
 
-use MalteKuhr\LaravelGPT\Models\GPTChat;
-use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
-use MalteKuhr\LaravelGPT\Facades\ChatManager;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Models\GPTChatMessage;
+use MalteKuhr\LaravelGpt\Models\GptChat;
+use MalteKuhr\LaravelGpt\Data\Message\ChatMessage;
+use MalteKuhr\LaravelGpt\Facades\ChatManager;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Models\GptChatMessage;
 use RuntimeException;
-use MalteKuhr\LaravelGPT\Enums\ChatType;
-use MalteKuhr\LaravelGPT\Enums\ChatStatus;
-use MalteKuhr\LaravelGPT\GPTChat as BaseGPTChat;
-use MalteKuhr\LaravelGPT\GPTAction as BaseGPTAction;
+use MalteKuhr\LaravelGpt\Enums\ChatType;
+use MalteKuhr\LaravelGpt\Enums\ChatStatus;
+use MalteKuhr\LaravelGpt\GptChat as BaseGptChat;
+use MalteKuhr\LaravelGpt\GptAction as BaseGptAction;
+use MalteKuhr\LaravelGpt\Helper\Dir;
 
-trait HasGPTChat
+abstract class BaseChat
 {
+    use Dir;
+
     /**
-     * The GPTChat instance associated with this trait.
+     * The GptChat instance associated with this trait.
      *
-     * @var GPTChat
+     * @var GptChat
      */
-    protected GPTChat $chat;
+    protected ?GptChat $chat = null;
 
     /**
      * The current status of the chat.
@@ -30,7 +33,7 @@ trait HasGPTChat
     public ChatStatus $status = ChatStatus::IDLE;
     
     /**
-     * Find and instantiate a GPTChat instance by ID and optionally class.
+     * Find and instantiate a GptChat instance by ID and optionally class.
      *
      * @param int $id
      * @param string|null $class
@@ -38,7 +41,7 @@ trait HasGPTChat
      */
     public static function find(int $id, ?string $class = null): ?static
     {
-        $gptChat = GPTChat::where('id', $id)
+        $gptChat = GptChat::where('id', $id)
             ->when($class, fn ($query, $class) => $query->where('class', $class))
             ->first();
     
@@ -69,38 +72,6 @@ trait HasGPTChat
     }
 
     /**
-     * Run the chat and get the response.
-     *
-     * @throws RuntimeException
-     * @return static
-     */
-    public function run(): static
-    {
-        $latestMessage = $this->latestMessage();
-
-        if (!$latestMessage || $latestMessage->role !== ChatRole::USER) {
-            throw new RuntimeException('The latest message must be from the user before running the chat.');
-        }
-
-        return ChatManager::send($this);
-    }
-
-    /**
-     * Run the chat asynchronously.
-     *
-     * @return void
-     */
-    public function runAsync(): void
-    {
-        $this->save();
-
-        dispatch(function () {
-            $this->run();
-            $this->save();
-        });
-    }
-
-    /**
      * Save the chat and its associated messages.
      *
      * This method saves the chat instance and iterates through its messages,
@@ -126,29 +97,35 @@ trait HasGPTChat
         $attributes = [
             'class' => get_class($this),
             'type' => match (true) {
-                $this instanceof BaseGPTAction => ChatType::ACTION,
-                $this instanceof BaseGPTChat => ChatType::CHAT,
+                $this instanceof BaseGptAction => ChatType::ACTION,
+                $this instanceof BaseGptChat => ChatType::CHAT,
                 default => throw new \InvalidArgumentException('Invalid chat type'),
             },
             'status' => $this->status ?? ChatStatus::IDLE,
             'properties' => $properties,
         ];
 
-        if ($this->chat->id) {
+        // get the messages
+        $messages = $this->chat->messages;
+
+        // create or update the chat
+        if ($this->chat?->id) {
             $this->chat->update($attributes);
         } else {
-            $this->chat = GPTChat::create($attributes);
+            $this->chat = GptChat::create($attributes);
         }
 
-        // save the chat
-        $this->chat->save();
-
         // Save any new or modified messages
-        $this->chat->messages->each(function ($message) {
+        foreach ($messages as $message) {
             if ($message->isDirty() || !$message->exists) {
+                if(is_null($message->id)) {
+                    unset($message->id);
+                }
+
+                $message->chat_id = $this->chat->id;
                 $message->save();
             }
-        });
+        }
     }
 
     /**
@@ -159,8 +136,13 @@ trait HasGPTChat
      */
     public function addMessage(ChatMessage $message): self
     {
-        $gptChatMessage = new GPTChatMessage(GPTChatMessage::fromChatMessage($message)->toArray());
-        $gptChatMessage->chat_id = $this->chat->id;
+        $gptChatMessage = new GptChatMessage(GptChatMessage::fromChatMessage($message)->toArray());
+
+        if (is_null($this->chat)) {
+            $this->chat = new GptChat();
+            $this->chat->setRelation('messages', collect());
+        }
+
         $this->chat->messages->push($gptChatMessage);
         return $this;
     }
@@ -176,7 +158,22 @@ trait HasGPTChat
     {
         $existingMessage = $this->chat->messages->where('id', $id)->first();
         if ($existingMessage) {
-            $existingMessage->fill(GPTChatMessage::fromChatMessage($message)->toArray());
+            $existingMessage->fill(GptChatMessage::fromChatMessage($message)->toArray());
+        }
+        return $this;
+    }
+
+    /**
+     * Update the latest message in the chat.
+     *
+     * @param ChatMessage $message
+     * @return $this
+     */
+    public function updateLatestMessage(ChatMessage $message): self
+    {
+        if ($this->chat && $this->chat->messages->isNotEmpty()) {
+            $latestMessage = $this->chat->messages->last();
+            $latestMessage->fill(GptChatMessage::fromChatMessage($message)->toArray());
         }
         return $this;
     }
@@ -202,5 +199,79 @@ trait HasGPTChat
         return $this->chat->messages->map(function ($message) {
             return $message->toChatMessage();
         })->all();
+    }
+
+    /**
+     * Get the ID of the chat.
+     * 
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->chat?->id;
+    }
+
+       /**
+     * Get the system message for the assistant.
+     * 
+     * @return string|null
+     */
+    public function systemMessage(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get available functions for the assistant.
+     * 
+     * @return GptFunction[]|null
+     */
+    public function functions(): ?array
+    {
+        return null;
+    }
+
+    /**
+     * Returns the function call behavior: 
+     * - true to call any function
+     * - false for no function calls
+     * - a string with the function class name (e.g., SentimentGptFunction::class) for a specific function.
+     * - an array of function class names (e.g., [SentimentGptFunction::class, AnotherGptFunction::class]) for multiple functions.
+     * 
+     * @return string[]|string|bool|null
+     */
+    public function functionCall(): array|string|bool|null
+    {
+        return null;
+    }
+
+    /**
+     * Get the temperature for the response. (0 - 2)
+     * 
+     * @return ?float
+     */
+    public function temperature(): ?float
+    {
+        return null;
+    }
+
+    /**
+     * Get the maximum token limit per request.
+     * 
+     * @return int|null
+     */
+    public function maxTokens(): ?int
+    {
+        return null;
+    }
+
+    /**
+     * Get the model to be used for the request.
+     * 
+     * @return string
+     */
+    public function model(): string
+    {
+        return config('laravel-gpt.default_model');
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Exceptions\GPTChat;
+namespace MalteKuhr\LaravelGpt\Exceptions\GptChat;
 
 use Exception;
 use Illuminate\Support\Arr;
-use MalteKuhr\LaravelGPT\Models\ChatMessage;
+use MalteKuhr\LaravelGpt\Models\ChatMessage;
 use Throwable;
 
 class ErrorPatternFoundException extends Exception

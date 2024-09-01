@@ -1,9 +1,9 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService\Converters\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters;
 
-use MalteKuhr\LaravelGPT\Exceptions\SchemaService\UnknownValidationOptionException;
-use MalteKuhr\LaravelGPT\Services\SchemaService\Converters\AbstractRuleConverter;
+use MalteKuhr\LaravelGpt\Exceptions\SchemaService\UnknownValidationOptionException;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\AbstractRuleConverter;
 
 class AlphaRuleConverter extends AbstractRuleConverter
 {

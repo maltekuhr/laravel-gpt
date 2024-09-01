@@ -1,12 +1,12 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Data\Message;
+namespace MalteKuhr\LaravelGpt\Data\Message;
 
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Contracts\ChatMessagePart;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatText;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFile;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatText;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFile;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
 
 class ChatMessage
 {
@@ -55,7 +55,7 @@ class ChatMessage
     {
         return new static(
             id: $data['id'] ?? null,
-            role: ChatRole::from($data['role']),
+            role: $data['role'] instanceof ChatRole ? $data['role'] : ChatRole::from($data['role']),
             parts: array_map(function ($partData) {
                 return match ($partData['type']) {
                     'text' => ChatText::fromArray($partData),

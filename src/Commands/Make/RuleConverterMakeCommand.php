@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Commands\Make;
+namespace MalteKuhr\LaravelGpt\Commands\Make;
 
-use MalteKuhr\LaravelGPT\Commands\GPTMakeCommand;
+use MalteKuhr\LaravelGpt\Commands\GptMakeCommand;
 
-class RuleConverterMakeCommand extends GPTMakeCommand
+class RuleConverterMakeCommand extends GptMakeCommand
 {
     protected $signature = 'make:rule-converter {name}';
 
@@ -12,7 +12,7 @@ class RuleConverterMakeCommand extends GPTMakeCommand
 
     protected function getDefaultNamespace(string $name): string
     {
-        return "GPT\\RuleConverters";
+        return "Gpt\\RuleConverters";
     }
 
     protected function getClassName(): string

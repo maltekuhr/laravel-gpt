@@ -1,26 +1,26 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Events;
+namespace MalteKuhr\LaravelGpt\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use MalteKuhr\LaravelGPT\GPTChat;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
 
 class ChatUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        protected GPTChat $chat
+        protected BaseChat $chat
     ) {}
 
     public function broadcastOn(): array
     {
         return [
-            new Channel("chats.{$this->chat->id}")
+            new Channel("chats.{$this->chat->getId()}")
         ];
     }
 
@@ -32,7 +32,7 @@ class ChatUpdated implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'chat' => $this->chat->id
+            'chat' => $this->chat->getId()
         ];
     }
 }

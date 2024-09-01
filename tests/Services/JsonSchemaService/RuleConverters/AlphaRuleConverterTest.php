@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverters;
 
-use MalteKuhr\LaravelGPT\Exceptions\SchemaService\UnknownValidationOptionException;
-use MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverterTestCase;
-use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
+use MalteKuhr\LaravelGpt\Exceptions\SchemaService\UnknownValidationOptionException;
+use MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverterTestCase;
+use MalteKuhr\LaravelGpt\Tests\Support\TestSchema;
 use Throwable;
 
 class AlphaRuleConverterTest extends RuleConverterTestCase

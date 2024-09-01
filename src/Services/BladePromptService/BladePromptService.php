@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\BladePromptService;
+namespace MalteKuhr\LaravelGpt\Services\BladePromptService;
 
 use Illuminate\Container\Container;
 use Illuminate\Events\Dispatcher;

@@ -1,9 +1,9 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Data\Message\Parts;
+namespace MalteKuhr\LaravelGpt\Data\Message\Parts;
 
-use MalteKuhr\LaravelGPT\Contracts\ChatMessagePart;
-use MalteKuhr\LaravelGPT\Enums\FunctionCallStatus;
+use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
+use MalteKuhr\LaravelGpt\Enums\FunctionCallStatus;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Arr;
 use Exception;

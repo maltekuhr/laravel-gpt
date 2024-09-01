@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService;
+namespace MalteKuhr\LaravelGpt\Tests\Services\SchemaService;
 
-use MalteKuhr\LaravelGPT\Managers\FunctionManager;
-use MalteKuhr\LaravelGPT\Tests\Support\TestGPTFunction;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Managers\FunctionManager;
+use MalteKuhr\LaravelGpt\Tests\Support\TestGptFunction;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 
 class NestedRulesTest extends TestCase
 {
@@ -14,7 +14,7 @@ class NestedRulesTest extends TestCase
      */
     public function testIfBasicNestingWorks($rules, $result)
     {
-        $function = new TestGPTFunction(
+        $function = new TestGptFunction(
             function: fn () => true,
             rules: $rules,
         );

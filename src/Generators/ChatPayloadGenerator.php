@@ -1,31 +1,31 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Generators;
+namespace MalteKuhr\LaravelGpt\Generators;
 
 use Illuminate\Support\Arr;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\FunctionCallRequiresFunctionsException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTFunction\MissingFunctionException;
-use MalteKuhr\LaravelGPT\GPTChat;
-use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\Managers\FunctionManager;
-use MalteKuhr\LaravelGPT\Models\ChatMessage;
+use MalteKuhr\LaravelGpt\Exceptions\GptFunction\FunctionCallRequiresFunctionsException;
+use MalteKuhr\LaravelGpt\Exceptions\GptFunction\MissingFunctionException;
+use MalteKuhr\LaravelGpt\GptChat;
+use MalteKuhr\LaravelGpt\GptFunction;
+use MalteKuhr\LaravelGpt\Managers\FunctionManager;
+use MalteKuhr\LaravelGpt\Models\ChatMessage;
 
 class ChatPayloadGenerator
 {
     /**
-     * @param GPTChat $chat
+     * @param GptChat $chat
      */
     protected function __construct(
-        protected GPTChat $chat
+        protected GptChat $chat
     ) {}
 
     /**
      * Creates a new instance of the class.
      *
-     * @param GPTChat $chat
+     * @param GptChat $chat
      * @return self
      */
-    public static function make(GPTChat $chat): self
+    public static function make(GptChat $chat): self
     {
         return new self($chat);
     }
@@ -88,13 +88,13 @@ class ChatPayloadGenerator
 
         // remove unused functions when function call
         if (is_string($this->chat->functionCall())) {
-            $functions = Arr::where($functions, function (GPTFunction $function) {
+            $functions = Arr::where($functions, function (GptFunction $function) {
                 return $function instanceof ($this->chat->functionCall());
             });
         }
 
         // generate docs for functions
-        $functions = array_map(function (GPTFunction $function): array {
+        $functions = array_map(function (GptFunction $function): array {
             return [
                 'type' => 'function',
                 'function' => FunctionManager::make($function)->docs()
@@ -121,11 +121,11 @@ class ChatPayloadGenerator
             return null;
         }
 
-        if (is_subclass_of($this->chat->functionCall(), GPTFunction::class)) {
-            /* @var GPTFunction $function */
+        if (is_subclass_of($this->chat->functionCall(), GptFunction::class)) {
+            /* @var GptFunction $function */
             $function = Arr::first(
                 array: $this->chat->functions(),
-                callback: fn (GPTFunction $function) => $function instanceof ($this->chat->functionCall())
+                callback: fn (GptFunction $function) => $function instanceof ($this->chat->functionCall())
             );
 
             // handle if function call is not in functions

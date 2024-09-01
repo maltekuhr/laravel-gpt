@@ -1,20 +1,21 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Managers;
+namespace MalteKuhr\LaravelGpt\Managers;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\SerializableClosure\Support\ReflectionClosure;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
 use Exception;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
-use MalteKuhr\LaravelGPT\GPTAction;
-use MalteKuhr\LaravelGPT\GPTChat;
-use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\Data\Message\ChatMessage;
-use MalteKuhr\LaravelGPT\Services\SchemaService\SchemaService;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\GptAction;
+use MalteKuhr\LaravelGpt\GptChat;
+use MalteKuhr\LaravelGpt\GptFunction;
+use MalteKuhr\LaravelGpt\Data\Message\ChatMessage;
+use MalteKuhr\LaravelGpt\Services\SchemaService\SchemaService;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
 use ReflectionClass;
 
 class FunctionManager
@@ -22,11 +23,11 @@ class FunctionManager
     /**
      * Generates the documentation for the function.
      *
-     * @param GPTFunction $function
+     * @param GptFunction $function
      * @param SchemaType $schemaType
      * @return array
      */
-    public function docs(GPTFunction $function, SchemaType $schemaType): array
+    public function docs(GptFunction $function, SchemaType $schemaType): array
     {
         $schema = $this->generateSchema($function, $schemaType);
 
@@ -40,11 +41,11 @@ class FunctionManager
     /**
      * Generates the json schema for the function.
      *
-     * @param GPTFunction $function
+     * @param GptFunction $function
      * @param SchemaType $schemaType
      * @return array
      */
-    protected function generateSchema(GPTFunction $function, SchemaType $schemaType): array
+    protected function generateSchema(GptFunction $function, SchemaType $schemaType): array
     {
         $schema = SchemaService::convert($function->rules(), $schemaType);
 
@@ -61,13 +62,13 @@ class FunctionManager
     /**
      * Calls the function and validates the arguments.
      *
-     * @param GPTChat $chat
+     * @param BaseChat $chat
      * @param ChatFunctionCall $functionCall
      * @return ChatFunctionCall
      */
-    public function call(GPTChat $chat, ChatFunctionCall $functionCall): ChatFunctionCall
+    public function call(BaseChat $chat, ChatFunctionCall $functionCall): ChatFunctionCall
     {
-        $function = Arr::first($chat->functions() ?? [], function(GPTFunction $function) use ($functionCall) {
+        $function = Arr::first($chat->functions() ?? [], function(GptFunction $function) use ($functionCall) {
             return $function->name() === $functionCall->name;
         });
 
@@ -76,9 +77,9 @@ class FunctionManager
         }
 
         try {
-            $this->validate($function, $functionCall->arguments);
+            $validatedArguments = $this->validate($function, $functionCall->arguments);
 
-            $arguments = $this->getFilteredArguments($function, $functionCall->arguments);
+            $arguments = $this->getFilteredArguments($function, $validatedArguments);
 
             $content = call_user_func_array(
                 callback: $function->function(),
@@ -92,13 +93,13 @@ class FunctionManager
     }
 
     /**
-     * Validates the given input against the rules of the given GPTFunction.
+     * Validates the given input against the rules of the given GptFunction.
      *
-     * @param GPTFunction $function
+     * @param GptFunction $function
      * @param array $input
      * @return array
      */
-    protected function validate(GPTFunction $function, array $input): array
+    protected function validate(GptFunction $function, array $input): array
     {
         $validator = Validator::make(
             $input, $function->rules(), $function->messages()
@@ -116,24 +117,24 @@ class FunctionManager
     /**
      * Removes all arguments which can't be passed to the function.
      *
-     * @param GPTFunction $function
+     * @param GptFunction $function
      * @param array $arguments
      * @return array
      */
-    protected function getFilteredArguments(GPTFunction $function, array $arguments): array
+    protected function getFilteredArguments(GptFunction $function, array $arguments): array
     {
         $parameters = (new ReflectionClosure($function->function()))->getParameters();
         return Arr::only($arguments, Arr::pluck($parameters, 'name'));
     }
 
     /**
-     * Extracts the function name from the class name for a given GPTFunction.
+     * Extracts the function name from the class name for a given GptFunction.
      *
-     * @param GPTFunction|GPTAction $function
+     * @param GptFunction|GptAction $function
      * @param array $parts
      * @return string
      */
-    public function getFunctionName(GPTFunction|GPTAction $function, array $parts = ['GPT', 'Function']): string
+    public function getFunctionName(GptFunction|GptAction $function, array $parts = ['Gpt', 'Function']): string
     {
         $name = (new ReflectionClass(get_class($function)))->getShortName();
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Exceptions\GPTChat;
+namespace MalteKuhr\LaravelGpt\Exceptions\GptChat;
 
 use Exception;
 

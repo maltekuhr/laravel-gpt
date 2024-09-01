@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService\Converters\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters;
 
 use Illuminate\Validation\Rules\In;
-use MalteKuhr\LaravelGPT\Services\SchemaService\Converters\AbstractRuleConverter;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\AbstractRuleConverter;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
 
 class InRuleConverter extends AbstractRuleConverter
 {

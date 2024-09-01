@@ -1,13 +1,13 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Facades;
+namespace MalteKuhr\LaravelGpt\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use MalteKuhr\LaravelGPT\Managers\ChatManager as ChatManagerClass;
-use MalteKuhr\LaravelGPT\GPTChat;
+use MalteKuhr\LaravelGpt\Managers\ChatManager as ChatManagerClass;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
 
 /**
- * @method static GPTChat send(GPTChat $chat)
+ * @method static BaseChat send(BaseChat $chat, int $rotation = 0, bool $sync = true)
  *
  * @see ChatManagerClass
  */

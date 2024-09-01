@@ -1,11 +1,11 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Support;
+namespace MalteKuhr\LaravelGpt\Tests\Support;
 
 use Closure;
-use MalteKuhr\LaravelGPT\GPTFunction;
+use MalteKuhr\LaravelGpt\GptFunction;
 
-class TestGPTFunction extends GPTFunction
+class TestGptFunction extends GptFunction
 {
     public function __construct(
         protected Closure $function,

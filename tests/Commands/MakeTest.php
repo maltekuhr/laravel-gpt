@@ -1,24 +1,24 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Commands;
+namespace MalteKuhr\LaravelGpt\Tests\Commands;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 
 class MakeTest extends TestCase
 {
     public function testIfCreationWorks()
     {
-        // delete LaravelGPT folder
-        File::deleteDirectory(app_path('GPT'));
+        // delete LaravelGpt folder
+        File::deleteDirectory(app_path('Gpt'));
 
-        $this->artisan('make:gpt-action TestGPTAction')
-            ->expectsOutputToContain('INFO  GPTAction [App\GPT\Actions\Test\TestGPTAction.php] created successfully.')
+        $this->artisan('make:gpt-action TestGptAction')
+            ->expectsOutputToContain('INFO  GptAction [App\Gpt\Actions\Test\TestGptAction.php] created successfully.')
             ->assertSuccessful();
 
         $this->assertFileExists(
-            app_path('GPT/Actions/Test/TestGPTAction.php')
+            app_path('Gpt/Actions/Test/TestGptAction.php')
         );
     }
 
@@ -28,7 +28,7 @@ class MakeTest extends TestCase
     public function testIfOverwriteProtectionWorks()
     {
         $this->artisan('make:gpt-action Test')
-            ->expectsOutputToContain('ERROR  GPTAction already exists.')
+            ->expectsOutputToContain('ERROR  GptAction already exists.')
             ->assertSuccessful();
     }
 
@@ -38,11 +38,11 @@ class MakeTest extends TestCase
     public function testIfAutoSuffixWorks()
     {
         $this->artisan('make:gpt-action Test2')
-            ->expectsOutputToContain('INFO  GPTAction [App\GPT\Actions\Test2\Test2GPTAction.php] created successfully.')
+            ->expectsOutputToContain('INFO  GptAction [App\Gpt\Actions\Test2\Test2GptAction.php] created successfully.')
             ->assertSuccessful();
 
         $this->assertFileExists(
-            app_path('GPT/Actions/Test2/Test2GPTAction.php')
+            app_path('Gpt/Actions/Test2/Test2GptAction.php')
         );
     }
 }

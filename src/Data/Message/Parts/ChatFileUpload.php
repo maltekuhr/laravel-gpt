@@ -1,8 +1,8 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Data\Message\Parts;
+namespace MalteKuhr\LaravelGpt\Data\Message\Parts;
 
-use MalteKuhr\LaravelGPT\Contracts\ChatMessagePart;
+use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
 use Illuminate\Support\Facades\Storage;
 
 class ChatFileUpload implements ChatMessagePart

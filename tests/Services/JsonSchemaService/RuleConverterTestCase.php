@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService;
+namespace MalteKuhr\LaravelGpt\Tests\Services\SchemaService;
 
-use MalteKuhr\LaravelGPT\Services\SchemaService\JsonSchemaService;
-use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Services\SchemaService\JsonSchemaService;
+use MalteKuhr\LaravelGpt\Tests\Support\TestSchema;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 use Throwable;
 
 abstract class RuleConverterTestCase extends TestCase

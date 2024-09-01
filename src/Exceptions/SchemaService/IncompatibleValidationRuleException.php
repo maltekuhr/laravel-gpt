@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Exceptions\SchemaService;
+namespace MalteKuhr\LaravelGpt\Exceptions\SchemaService;
 
 use Exception;
 

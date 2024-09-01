@@ -1,11 +1,11 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverters;
+namespace MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverters;
 
-use MalteKuhr\LaravelGPT\Exceptions\SchemaService\IncompatibleValidationRuleException;
-use MalteKuhr\LaravelGPT\Services\SchemaService\JsonSchemaService;
-use MalteKuhr\LaravelGPT\Tests\Services\SchemaService\RuleConverterTestCase;
-use MalteKuhr\LaravelGPT\Tests\Support\TestSchema;
+use MalteKuhr\LaravelGpt\Exceptions\SchemaService\IncompatibleValidationRuleException;
+use MalteKuhr\LaravelGpt\Services\SchemaService\JsonSchemaService;
+use MalteKuhr\LaravelGpt\Tests\Services\SchemaService\RuleConverterTestCase;
+use MalteKuhr\LaravelGpt\Tests\Support\TestSchema;
 use Throwable;
 
 class MaxRuleConverterTest extends RuleConverterTestCase

@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Support\Enums;
+namespace MalteKuhr\LaravelGpt\Tests\Support\Enums;
 
 enum IntegerEnum: int
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MalteKuhr\LaravelGPT\Exceptions\SchemaService;
+namespace MalteKuhr\LaravelGpt\Exceptions\SchemaService;
 
 use InvalidArgumentException;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Support;
+namespace MalteKuhr\LaravelGpt\Tests\Support;
 
 class TestResponse
 {

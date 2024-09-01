@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Contracts;
+namespace MalteKuhr\LaravelGpt\Contracts;
 
 interface ChatMessagePart
 {

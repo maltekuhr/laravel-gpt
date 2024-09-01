@@ -1,12 +1,16 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT;
+namespace MalteKuhr\LaravelGpt;
 use Closure;
-use MalteKuhr\LaravelGPT\Facades\FunctionManager;
-use MalteKuhr\LaravelGPT\Facades\ChatManager;
-use MalteKuhr\LaravelGPT\Enums\ChatStatus;
+use MalteKuhr\LaravelGpt\Facades\FunctionManager;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
+use MalteKuhr\LaravelGpt\Facades\ChatManager;
+use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
+use RuntimeException;
 
-abstract class GPTAction extends GPTChat
+abstract class GptAction extends BaseChat
 {
     /**
      * The function to be invoked by the model.
@@ -22,7 +26,7 @@ abstract class GPTAction extends GPTChat
      */
     public function functionName(): string
     {
-        return FunctionManager::getFunctionName($this, ['GPT', 'Action']);
+        return FunctionManager::getFunctionName($this, ['Gpt', 'Action']);
     }
 
     /**
@@ -53,9 +57,9 @@ abstract class GPTAction extends GPTChat
     public function functions(): array
     {
         return [
-            new class($this) extends GPTFunction {
+            new class($this) extends GptFunction {
                 public function __construct(
-                    private GPTAction $action
+                    private GptAction $action
                 ) {}
 
                 public function name(): string
@@ -92,12 +96,26 @@ abstract class GPTAction extends GPTChat
     }
 
     /**
-     * Run the action.
-     * 
-     * @return void
+     * Run the chat and get the response.
+     *
+     * @throws RuntimeException
+     * @return array
      */
-    public function run(bool $sync = false): mixed
+    public function run(bool $sync = true): array
     {
-        
+        $latestMessage = $this->getLatestMessage();
+
+        if (!$latestMessage || $latestMessage->role !== ChatRole::USER) {
+            throw new RuntimeException('The latest message must be from the user before running the chat.');
+        }
+
+        ChatManager::send($this, sync: $sync);
+
+        $response = $this->getLatestMessage();
+
+        /* @var ChatFunctionCall $functionCall */
+        $functionCall = array_filter($response->parts, fn (ChatMessagePart $part) => $part instanceof ChatFunctionCall)[0];
+
+        return $functionCall->response;
     }
 }

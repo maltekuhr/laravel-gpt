@@ -1,10 +1,10 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService;
 
 use Illuminate\Support\Arr;
-use MalteKuhr\LaravelGPT\Exceptions\SchemaService\FieldSetException;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\Exceptions\SchemaService\FieldSetException;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
 
 class SchemaService
 {
@@ -112,9 +112,11 @@ class SchemaService
      */
     protected function setSchemaType(array $schema, string $type, SchemaType $schemaType): array
     {
-        if (isset($schema['type']) && $schema['type'] != $type) {
+        if (isset($schema['type']) && strtolower($schema['type']) != strtolower($type)) {
             throw FieldSetException::create('type');
         }
+
+        $schema['type'] = $schemaType === SchemaType::OPEN_API ? strtoupper($type) : $type;
 
         return $schema;
     }

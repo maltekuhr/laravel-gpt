@@ -2,9 +2,9 @@
 
 namespace App\{NAMESPACE};
 
-use MalteKuhr\LaravelGPT\GPTChat;
+use MalteKuhr\LaravelGpt\GptChat;
 
-class {NAME} extends GPTChat
+class {NAME} extends GptChat
 {
     /**
      * Explains what the assistant should do and which rules to follow.
@@ -15,12 +15,12 @@ class {NAME} extends GPTChat
     }
 
     /**
-     * Available functions for the assistant. Must be an array of GPTFunction classes.
+     * Available functions for the assistant. Must be an array of GptFunction classes.
      */
     public function functions(): ?array
     {
         return [
-            // new ExampleGPTFunction()
+            // new ExampleGptFunction()
         ];
     }
 

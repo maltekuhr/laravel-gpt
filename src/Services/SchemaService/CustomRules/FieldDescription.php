@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService\CustomRules;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService\CustomRules;
 
 use Closure;
 use Illuminate\Contracts\Validation\Rule;

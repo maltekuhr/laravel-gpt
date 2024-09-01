@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Enums;
+namespace MalteKuhr\LaravelGpt\Enums;
 
 enum SchemaType
 {

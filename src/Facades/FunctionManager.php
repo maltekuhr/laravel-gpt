@@ -1,19 +1,19 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Facades;
+namespace MalteKuhr\LaravelGpt\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
-use MalteKuhr\LaravelGPT\GPTFunction;
-use MalteKuhr\LaravelGPT\GPTChat;
-use MalteKuhr\LaravelGPT\GPTAction;
-use MalteKuhr\LaravelGPT\Data\Message\Parts\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Managers\FunctionManager as FunctionManagerClass;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\GptFunction;
+use MalteKuhr\LaravelGpt\Contracts\BaseChat;
+use MalteKuhr\LaravelGpt\GptAction;
+use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Managers\FunctionManager as FunctionManagerClass;
 
 /**
- * @method static array docs(GPTFunction $function, SchemaType $schemaType)
- * @method static ChatFunctionCall call(GPTChat $chat, ChatFunctionCall $functionCall)
- * @method static string getFunctionName(GPTFunction|GPTAction $function, array $parts = ['GPT', 'Function'])
+ * @method static array docs(GptFunction $function, SchemaType $schemaType)
+ * @method static ChatFunctionCall call(BaseChat $chat, ChatFunctionCall $functionCall)
+ * @method static string getFunctionName(GptFunction|GptAction $function, array $parts = ['Gpt', 'Function'])
  *
  * @see FunctionManagerClass
  */

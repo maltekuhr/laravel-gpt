@@ -1,13 +1,13 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests;
+namespace MalteKuhr\LaravelGpt\Tests;
 
 use Illuminate\Support\Arr;
-use MalteKuhr\LaravelGPT\Enums\ChatRole;
-use MalteKuhr\LaravelGPT\Models\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Models\ChatMessage;
-use MalteKuhr\LaravelGPT\Providers\GPTServiceProvider;
-use MalteKuhr\LaravelGPT\Testing\OpenAIFake;
+use MalteKuhr\LaravelGpt\Enums\ChatRole;
+use MalteKuhr\LaravelGpt\Models\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Models\ChatMessage;
+use MalteKuhr\LaravelGpt\Providers\GptServiceProvider;
+use MalteKuhr\LaravelGpt\Testing\OpenAIFake;
 use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Chat\CreateResponse;
 use Orchestra\Testbench\TestCase as BasicTestCase;
@@ -17,7 +17,7 @@ class TestCase extends BasicTestCase
     public function getPackageProviders($app)
     {
         return [
-            GPTServiceProvider::class
+            GptServiceProvider::class
         ];
     }
 

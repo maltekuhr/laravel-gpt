@@ -1,19 +1,19 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Chats;
+namespace MalteKuhr\LaravelGpt\Tests\Chats;
 
-use MalteKuhr\LaravelGPT\Exceptions\GPTChat\ErrorPatternFoundException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTChat\NoFunctionCallException;
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTFunction;
-use MalteKuhr\LaravelGPT\Models\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Exceptions\GptChat\ErrorPatternFoundException;
+use MalteKuhr\LaravelGpt\Exceptions\GptChat\NoFunctionCallException;
+use MalteKuhr\LaravelGpt\Extensions\FillableGptChat;
+use MalteKuhr\LaravelGpt\Extensions\FillableGptFunction;
+use MalteKuhr\LaravelGpt\Models\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 
 class BasicTest extends TestCase
 {
     public function testIfSimpleChattingWorks()
     {
-        $chat = FillableGPTChat::make();
+        $chat = FillableGptChat::make();
         $chat->addMessage('Laravel is a...');
 
         $this->setTestResponses($answers = [
@@ -40,7 +40,7 @@ class BasicTest extends TestCase
 
     public function testIfSimpleChattingWithSystemMessageWorks()
     {
-        $chat = FillableGPTChat::make(
+        $chat = FillableGptChat::make(
             systemMessage: fn () => 'Answer Laravel related questions!'
         );
         $chat->addMessage('Laravel is a...');

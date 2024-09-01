@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Testing;
+namespace MalteKuhr\LaravelGpt\Testing;
 
 use OpenAI\Testing\ClientFake;
 

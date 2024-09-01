@@ -1,22 +1,22 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Commands\Make;
+namespace MalteKuhr\LaravelGpt\Commands\Make;
 
-use MalteKuhr\LaravelGPT\Commands\GPTMakeCommand;
+use MalteKuhr\LaravelGpt\Commands\GptMakeCommand;
 
-class GPTChatMakeCommand extends GPTMakeCommand
+class GptChatMakeCommand extends GptMakeCommand
 {
     protected $signature = 'make:gpt-chat {name}';
 
-    protected $description = 'Create a new GPT chat class';
+    protected $description = 'Create a new Gpt chat class';
 
     protected function getDefaultNamespace(string $name): string
     {
-        return "GPT\\Chats\\$name";
+        return "Gpt\\Chats\\$name";
     }
 
     protected function getClassName(): string
     {
-        return "GPTChat";
+        return "GptChat";
     }
 }

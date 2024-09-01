@@ -1,12 +1,12 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Models;
+namespace MalteKuhr\LaravelGpt\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class GPTChat extends Model
+class GptChat extends Model
 {
     use SoftDeletes;
 
@@ -25,6 +25,6 @@ class GPTChat extends Model
      */
     public function messages(): HasMany
     {
-        return $this->hasMany(GPTChatMessage::class, 'chat_id');
+        return $this->hasMany(GptChatMessage::class, 'chat_id');
     }
 }

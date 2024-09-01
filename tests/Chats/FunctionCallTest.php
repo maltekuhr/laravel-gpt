@@ -1,22 +1,22 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Chats;
+namespace MalteKuhr\LaravelGpt\Tests\Chats;
 
-use MalteKuhr\LaravelGPT\Exceptions\GPTChat\ErrorPatternFoundException;
-use MalteKuhr\LaravelGPT\Exceptions\GPTChat\NoFunctionCallException;
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTFunction;
-use MalteKuhr\LaravelGPT\Models\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Exceptions\GptChat\ErrorPatternFoundException;
+use MalteKuhr\LaravelGpt\Exceptions\GptChat\NoFunctionCallException;
+use MalteKuhr\LaravelGpt\Extensions\FillableGptChat;
+use MalteKuhr\LaravelGpt\Extensions\FillableGptFunction;
+use MalteKuhr\LaravelGpt\Models\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 
 class FunctionCallTest extends TestCase
 {
     public function testIfFunctionCallWorks()
     {
-        $chat = FillableGPTChat::make(
+        $chat = FillableGptChat::make(
             systemMessage: fn () => 'Answer Laravel related questions!',
             functions: fn () => [
-                new FillableGPTFunction(
+                new FillableGptFunction(
                     name: fn () => 'search_documentation',
                     description: fn () => 'Searches the Laravel documentation',
                     function: fn () => function (string $query) {
@@ -57,10 +57,10 @@ class FunctionCallTest extends TestCase
     {
         $this->expectException(NoFunctionCallException::class);
 
-        $chat = FillableGPTChat::make(
+        $chat = FillableGptChat::make(
             systemMessage: fn () => 'Answer Laravel related questions!',
             functions: fn () => [
-                new FillableGPTFunction(
+                new FillableGptFunction(
                     name: fn () => 'search_documentation',
                     description: fn () => 'Searches the Laravel documentation',
                     function: fn () => function (string $query) {
@@ -73,7 +73,7 @@ class FunctionCallTest extends TestCase
                     ]
                 )
             ],
-            functionCall: fn () => FillableGPTFunction::class
+            functionCall: fn () => FillableGptFunction::class
         );
 
         $chat->addMessage('How to install Laravel?');
@@ -92,10 +92,10 @@ class FunctionCallTest extends TestCase
 
     public function testIfFunctionCallForcingCorrectionWorks()
     {
-        $chat = FillableGPTChat::make(
+        $chat = FillableGptChat::make(
             systemMessage: fn () => 'Answer Laravel related questions!',
             functions: fn () => [
-                new FillableGPTFunction(
+                new FillableGptFunction(
                     name: fn () => 'search_documentation',
                     description: fn () => 'Searches the Laravel documentation',
                     function: fn () => function (string $query) {
@@ -108,7 +108,7 @@ class FunctionCallTest extends TestCase
                     ]
                 )
             ],
-            functionCall: fn () => FillableGPTFunction::class
+            functionCall: fn () => FillableGptFunction::class
         );
 
         $chat->addMessage('How to install Laravel?');
@@ -135,10 +135,10 @@ class FunctionCallTest extends TestCase
 
     public function testIfFunctionCallErrorsRetryWorks()
     {
-        $chat = FillableGPTChat::make(
+        $chat = FillableGptChat::make(
             systemMessage: fn () => 'Answer Laravel related questions!',
             functions: fn () => [
-                new FillableGPTFunction(
+                new FillableGptFunction(
                     name: fn () => 'search_documentation',
                     description: fn () => 'Searches the Laravel documentation',
                     function: fn () => function (string $query) {
@@ -151,7 +151,7 @@ class FunctionCallTest extends TestCase
                     ]
                 )
             ],
-            functionCall: fn () => FillableGPTFunction::class
+            functionCall: fn () => FillableGptFunction::class
         );
 
         $chat->addMessage('How to install Laravel?');
@@ -185,10 +185,10 @@ class FunctionCallTest extends TestCase
     {
         $this->expectException(ErrorPatternFoundException::class);
 
-        $chat = FillableGPTChat::make(
+        $chat = FillableGptChat::make(
             systemMessage: fn () => 'Answer Laravel related questions!',
             functions: fn () => [
-                new FillableGPTFunction(
+                new FillableGptFunction(
                     name: fn () => 'search_documentation',
                     description: fn () => 'Searches the Laravel documentation',
                     function: fn () => function (string $query) {
@@ -201,7 +201,7 @@ class FunctionCallTest extends TestCase
                     ]
                 )
             ],
-            functionCall: fn () => FillableGPTFunction::class
+            functionCall: fn () => FillableGptFunction::class
         );
 
         $chat->addMessage('How to install Laravel?');

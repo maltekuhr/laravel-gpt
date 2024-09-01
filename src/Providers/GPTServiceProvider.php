@@ -1,20 +1,20 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Providers;
+namespace MalteKuhr\LaravelGpt\Providers;
 
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use MalteKuhr\LaravelGPT\Commands\Make\GPTActionMakeCommand;
-use MalteKuhr\LaravelGPT\Commands\Make\GPTChatMakeCommand;
-use MalteKuhr\LaravelGPT\Commands\Make\GPTFunctionMakeCommand;
-use MalteKuhr\LaravelGPT\Commands\Make\RuleConverterMakeCommand;
-use MalteKuhr\LaravelGPT\Managers\ChatManager;
-use MalteKuhr\LaravelGPT\Managers\FunctionManager;
-use MalteKuhr\LaravelGPT\Drivers\OpenAIDriver;
-use MalteKuhr\LaravelGPT\Drivers\GeminiDriver;
+use MalteKuhr\LaravelGpt\Commands\Make\GptActionMakeCommand;
+use MalteKuhr\LaravelGpt\Commands\Make\GptChatMakeCommand;
+use MalteKuhr\LaravelGpt\Commands\Make\GptFunctionMakeCommand;
+use MalteKuhr\LaravelGpt\Commands\Make\RuleConverterMakeCommand;
+use MalteKuhr\LaravelGpt\Managers\ChatManager;
+use MalteKuhr\LaravelGpt\Managers\FunctionManager;
+use MalteKuhr\LaravelGpt\Drivers\OpenAIDriver;
+use MalteKuhr\LaravelGpt\Drivers\GeminiDriver;
 use Exception;
 
-class GPTServiceProvider extends BaseServiceProvider implements DeferrableProvider
+class GptServiceProvider extends BaseServiceProvider implements DeferrableProvider
 {
     /**
      * Register the application services.
@@ -40,6 +40,8 @@ class GPTServiceProvider extends BaseServiceProvider implements DeferrableProvid
             }
 
             $this->app->singleton("laravel-gpt.{$name}", fn ($app) => new $driver($name));
+
+            $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         }
     }
 
@@ -51,13 +53,12 @@ class GPTServiceProvider extends BaseServiceProvider implements DeferrableProvid
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../../config/laravel-gpt.php' => config_path('laravel-gpt.php'),
-                __DIR__.'/../../database/migrations/2024_07_20_112821_create_gpt_chats_table.php' => database_path('migrations/2024_07_20_112821_create_gpt_chats_table.php'),
             ], 'laravel-gpt');
 
             $this->commands([
-                GPTFunctionMakeCommand::class,
-                GPTChatMakeCommand::class,
-                GPTActionMakeCommand::class,
+                GptFunctionMakeCommand::class,
+                GptChatMakeCommand::class,
+                GptActionMakeCommand::class,
                 RuleConverterMakeCommand::class
             ]);
         }

@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Enums;
+namespace MalteKuhr\LaravelGpt\Enums;
 
 
 
@@ -11,6 +11,6 @@ enum ChatStatus: string
 
     public static function names(): array
     {
-        return array_column(static::cases(), 'name');
+        return array_column(static::cases(), 'value');
     }
 }

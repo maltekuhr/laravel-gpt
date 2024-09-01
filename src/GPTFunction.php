@@ -1,14 +1,14 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT;
+namespace MalteKuhr\LaravelGpt;
 
 use Closure;
-use MalteKuhr\LaravelGPT\Facades\FunctionManager;
+use MalteKuhr\LaravelGpt\Facades\FunctionManager;
 
-abstract class GPTFunction
+abstract class GptFunction
 {
     /**
-     * Provides the name of the GPTFunction to be used for function calls. Ensure
+     * Provides the name of the GptFunction to be used for function calls. Ensure
      * to provide a unique name within the functions() array in any Request where
      * this function is used.
      *
@@ -20,7 +20,7 @@ abstract class GPTFunction
     }
 
     /**
-     * Describes the purpose and functionality of the GPT function. This is utilized
+     * Describes the purpose and functionality of the Gpt function. This is utilized
      * for generating the function documentation.
      *
      * @return string

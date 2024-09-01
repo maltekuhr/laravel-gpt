@@ -1,11 +1,11 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Commands;
+namespace MalteKuhr\LaravelGpt\Commands;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 
-abstract class GPTMakeCommand extends Command
+abstract class GptMakeCommand extends Command
 {
     abstract protected function getDefaultNamespace(string $name): string;
 

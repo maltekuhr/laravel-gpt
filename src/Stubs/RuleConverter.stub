@@ -2,7 +2,7 @@
 
 namespace App\{NAMESPACE};
 
-use MalteKuhr\LaravelGPT\Services\SchemaService\Converters\AbstractRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\AbstractRuleConverter;
 
 class {NAME} extends AbstractRuleConverter
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Services\SchemaService\Converters;
+namespace MalteKuhr\LaravelGpt\Services\SchemaService\Converters;
 
-use MalteKuhr\LaravelGPT\Exceptions\SchemaService\FieldSetException;
-use MalteKuhr\LaravelGPT\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\Exceptions\SchemaService\FieldSetException;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
 
 abstract class AbstractRuleConverter
 {

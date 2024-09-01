@@ -1,15 +1,15 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Chats;
+namespace MalteKuhr\LaravelGpt\Tests\Chats;
 
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTChat;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Extensions\FillableGptChat;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 
 class HooksTest extends TestCase
 {
     public function testIfSimpleChattingWorks()
     {
-        $chat = FillableGPTChat::make();
+        $chat = FillableGptChat::make();
         $chat->addMessage('Laravel is a...');
 
         $this->setTestResponses($answers = [

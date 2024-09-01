@@ -1,11 +1,11 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Actions;
+namespace MalteKuhr\LaravelGpt\Tests\Actions;
 
-use MalteKuhr\LaravelGPT\Exceptions\GPTChat\NoFunctionCallException;
-use MalteKuhr\LaravelGPT\Extensions\FillableGPTAction;
-use MalteKuhr\LaravelGPT\Models\ChatFunctionCall;
-use MalteKuhr\LaravelGPT\Tests\TestCase;
+use MalteKuhr\LaravelGpt\Exceptions\GptChat\NoFunctionCallException;
+use MalteKuhr\LaravelGpt\Extensions\FillableGptAction;
+use MalteKuhr\LaravelGpt\Models\ChatFunctionCall;
+use MalteKuhr\LaravelGpt\Tests\TestCase;
 
 class BasicTest extends TestCase
 {
@@ -20,7 +20,7 @@ class BasicTest extends TestCase
             )
         );
 
-        FillableGPTAction::make(
+        FillableGptAction::make(
             systemMessage: fn () => 'Call the test function',
             function: function (string $foo) {
                 $this->assertEquals('bar', $foo);
@@ -45,7 +45,7 @@ class BasicTest extends TestCase
             ]
         ]);
 
-        FillableGPTAction::make(
+        FillableGptAction::make(
             systemMessage: fn () => 'Call the test function',
             function: fn () => null,
             rules: fn () => [
@@ -71,7 +71,7 @@ class BasicTest extends TestCase
             ]
         ]);
 
-        FillableGPTAction::make(
+        FillableGptAction::make(
             systemMessage: fn () => 'Call the test function',
             function: function (string $foo) {
                 $this->assertEquals('bar', $foo);
