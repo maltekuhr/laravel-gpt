@@ -31,9 +31,9 @@ class ChatMessage
      *
      * @return ChatMessage
      */
-    public static function from(ChatRole $role, mixed $content, string|array|null $name = null, ?ChatFunctionCall $functionCall = null): ChatMessage
+    public static function from(ChatRole $role, mixed $content, string|array|null $name = null, ?ChatFunctionCall $functionCall = null, ?string $image_url = null): ChatMessage
     {
-        return new static($role, $name, $content, $functionCall);
+        return new static($role, $name, $content, $functionCall, $image_url);
     }
 
     /**
