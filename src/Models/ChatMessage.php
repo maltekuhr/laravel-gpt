@@ -13,12 +13,14 @@ class ChatMessage
      * @param string|null $name
      * @param mixed|null $content
      * @param ChatFunctionCall|null $functionCall
+     * @param string|null $image_url
      */
     public function __construct(
         public readonly ChatRole $role,
         public readonly ?string $name = null,
         public readonly mixed $content = null,
-        public readonly ?ChatFunctionCall $functionCall = null
+        public readonly ?ChatFunctionCall $functionCall = null,
+        public readonly ?string $image_url = null,
     ) {}
 
     /**
@@ -55,8 +57,20 @@ class ChatMessage
     {
         $message = [
             'role' => $this->role->value,
-            'content' => is_string($this->content) ? $this->content : json_encode($this->content),
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => is_string($this->content) ? $this->content : json_encode($this->content),
+                ],
+            ],
         ];
+        
+        if (isset($this->image_url) && is_string($this->image_url)) {
+            $message['content'][] = [
+                'type' => 'image_url',
+                'image_url' => ['url' => $this->image_url],
+            ];
+        }
 
         if ($this->name) {
             $message['name'] = $this->name;
