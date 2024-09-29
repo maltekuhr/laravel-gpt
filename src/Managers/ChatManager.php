@@ -152,7 +152,6 @@ class ChatManager
                 )
             );
 
-            dump('call function', $functionCall);
             $chat->updateLatestMessage(
                 $latestMessage->replacePart(
                     index: $index,

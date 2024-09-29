@@ -67,7 +67,7 @@ class OpenAIDriver implements Driver
     public function run(BaseChat $chat, ?Closure $streamChat = null): void
     {
         $payload = $this->generatePayload($chat);
-
+        
         $stream = $this->client->chat()->createStreamed($payload);
 
         $this->handleResponse($chat, $stream, $streamChat);   
@@ -85,8 +85,11 @@ class OpenAIDriver implements Driver
     {
         $tools = $this->getTools($chat);
 
+        $model = $chat->model();
+        $version = config('laravel-gpt.models')[$model]['version'] ?? $model;
+
         return array_filter([
-            'model' => $chat->model(),
+            'model' => $version,
             'messages' => $this->getMessages($chat),
             'temperature' => $chat->temperature(),
             'max_tokens' => $chat->maxTokens(),
@@ -153,6 +156,7 @@ class OpenAIDriver implements Driver
                         'type' => 'function',
                         'function' => [
                             'name' => $functionCall->name,
+                            'strict' => true,
                             'arguments' => json_encode($functionCall->arguments),
                         ]
                     ]) : null,
