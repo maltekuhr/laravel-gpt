@@ -80,18 +80,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | File Converters
+    | Disk
     |--------------------------------------------------------------------------
     |
-    | This section defines the file converters used to transform certain file
-    | types into formats supported by the AI models. Each converter specifies
-    | the input file type, output format, and the class responsible for
-    | performing the conversion.
+    | The disk used to store files used in chat messages. It is recommended to
+    | use a s3 disk for this. If not make sure the disk can be accessed from
+    | the internet.
     |
     */
 
-    'file_converters' => [
+    'disk' => [
+        'name' => 'private',
+        'prefix' => 'gpt-chats',
+    ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database Connection
+    |--------------------------------------------------------------------------
+    |
+    | This option specifies which database connection to use for storing
+    | Laravel GPT related data. By default, it uses the application's default
+    | database connection. You can specify a different connection if needed.
+    |
+    */
+
+    'database' => [
+        'connection' => env('GPT_DB_CONNECTION', config('database.default')),
     ],
 
     /*

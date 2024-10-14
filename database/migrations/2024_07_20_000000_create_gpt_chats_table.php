@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->enum('status', ChatStatus::names())->default(ChatStatus::IDLE->value);
 
             $table->json('properties')->nullable();
+            $table->json('meta')->nullable();
 
             $table->softDeletes();
             $table->timestamps();

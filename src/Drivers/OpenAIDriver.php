@@ -132,13 +132,7 @@ class OpenAIDriver implements Driver
                         ChatFile::class => [
                             'type' => 'image_url',
                             'image_url' => [
-                                'url' => "data:{$part->mimeType};base64,{$part->content}"
-                            ]
-                        ],
-                        ChatFileUrl::class => [
-                            'type' => 'image_url',
-                            'image_url' => [
-                                'url' => $part->url
+                                'url' => $part instanceof ChatFile ? $part->getFileUrl() : null
                             ]
                         ],
                         default => throw new Exception("The part type '".get_class($part)."' is not supported by the OpenAI driver."),
