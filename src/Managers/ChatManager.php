@@ -67,7 +67,7 @@ class ChatManager
         $allComplete = count(array_filter($functionCalls, fn (ChatFunctionCall $functionCall) => $functionCall->status != FunctionCallStatus::COMPLETED)) == 0;
 
         if (count($functionCalls) > 0 && !$allComplete) {
-            $this->rerun($chat);
+            $this->rerun($chat, $rotation);
         }
 
         // Check if a function call was required and if it was actually done

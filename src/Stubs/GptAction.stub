@@ -1,0 +1,41 @@
+<?php
+
+namespace App\{NAMESPACE};
+
+use MalteKuhr\LaravelGpt\GptAction;
+use Closure;
+
+class {NAME} extends GptAction
+{
+    /**
+     * Explains what the assistant should do and which rules to follow.
+     *
+     * @return string|null
+     */
+    public function systemMessage(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Specifies the function to be invoked by the model.
+     *
+     * @return Closure
+     */
+    public function function(): Closure
+    {
+        return function (): void {
+            // TODO: Implement Closure.
+        };
+    }
+
+    /**
+     * Defines rules for input validation and schema generation.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [];
+    }
+}
