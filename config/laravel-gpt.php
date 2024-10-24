@@ -1,35 +1,5 @@
 <?php
 
-use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\{
-    AcceptedIfRuleConverter,
-    AcceptedRuleConverter,
-    AfterOrEqualRuleConverter,
-    AfterRuleConverter,
-    AlphaDashRuleConverter,
-    AlphaNumRuleConverter,
-    AlphaRuleConverter,
-    ArrayRuleConverter,
-    AsciiRuleConverter,
-    BeforeOrEqualRuleConverter,
-    BeforeRuleConverter,
-    BetweenRuleConverter,
-    BooleanRuleConverter,
-    DateRuleConverter,
-    DecimalRuleConverter,
-    EmailRuleConverter,
-    EnumRuleConverter,
-    FieldDescriptionRuleConverter,
-    InRuleConverter,
-    IntegerRuleConverter,
-    MaxRuleConverter,
-    MinRuleConverter,
-    NotInRuleConverter,
-    RequiredIfRuleConverter,
-    RequiredRuleConverter,
-    StringRuleConverter,
-    UrlRuleConverter,
-};
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -111,26 +81,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Max Rotations
-    |--------------------------------------------------------------------------
-    |
-    | This section defines the maximum number of function call messages the
-    | assistant can make before taking action based on the configuration.
-    | This helps prevent infinite loops and excessive API usage. The limit
-    | is applied globally, but the behavior differs based on the context.
-    |
-    | When possible, the chat will try to force the model to send a message.
-    | When this is not possible due to enforced function calling (like in
-    | GptActions or in chats with forced function calling), the chat will
-    | throw an exception.
-    |
-    */
-
-    'max-rotations' => 10,
-
-
-    /*
-    |--------------------------------------------------------------------------
     | Connections
     |--------------------------------------------------------------------------
     |
@@ -203,34 +153,6 @@ return [
     */
     'rules' => [
         // custom rule converters
-
-        // default rule converters
-        AcceptedIfRuleConverter::class,
-        AcceptedRuleConverter::class,
-        AfterOrEqualRuleConverter::class,
-        AfterRuleConverter::class,
-        AlphaDashRuleConverter::class,
-        AlphaNumRuleConverter::class,
-        AlphaRuleConverter::class,
-        ArrayRuleConverter::class,
-        AsciiRuleConverter::class,
-        BeforeOrEqualRuleConverter::class,
-        BeforeRuleConverter::class,
-        BetweenRuleConverter::class,
-        BooleanRuleConverter::class,
-        DateRuleConverter::class,
-        DecimalRuleConverter::class,
-        EmailRuleConverter::class,
-        EnumRuleConverter::class,
-        FieldDescriptionRuleConverter::class,
-        InRuleConverter::class,
-        IntegerRuleConverter::class,
-        MaxRuleConverter::class,
-        MinRuleConverter::class,
-        NotInRuleConverter::class,
-        RequiredIfRuleConverter::class,
-        RequiredRuleConverter::class,
-        StringRuleConverter::class,
-        UrlRuleConverter::class,
+        // AcceptedIfRuleConverter::class,
     ],
 ];

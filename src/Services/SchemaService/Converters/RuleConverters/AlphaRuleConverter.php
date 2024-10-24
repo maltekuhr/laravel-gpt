@@ -10,7 +10,7 @@ class AlphaRuleConverter extends AbstractRuleConverter
     public function handle(): void
     {
         foreach ($this->rules as $rule) {
-            if (is_string($rule) && str_starts_with($rule, 'alpha')) {
+            if (is_string($rule) && ($rule === 'alpha' || str_starts_with($rule, 'alpha:'))) {
                 preg_match('/^alpha:(.*)/', $rule, $matches);
                 $option = $matches[1] ?? null;
 

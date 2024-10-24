@@ -18,18 +18,6 @@ class {NAME} extends GptAction
     }
 
     /**
-     * Specifies the function to be invoked by the model.
-     *
-     * @return Closure
-     */
-    public function function(): Closure
-    {
-        return function (): void {
-            // TODO: Implement Closure.
-        };
-    }
-
-    /**
      * Defines rules for input validation and schema generation.
      *
      * @return array

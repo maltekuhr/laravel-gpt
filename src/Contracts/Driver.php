@@ -2,8 +2,8 @@
 
 namespace MalteKuhr\LaravelGpt\Contracts;
 
-use MalteKuhr\LaravelGpt\Contracts\BaseChat;
-use Closure;
+use MalteKuhr\LaravelGpt\GptAction;
+use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
 
 interface Driver
 {
@@ -15,12 +15,20 @@ interface Driver
     public function __construct(string $connection);
 
     /**
-     * Run the AI model with the given chat.
+     * Run the AI model for the given action.
      *
-     * @param BaseChat $chat
-     * @param Closure|null $streamChat
+     * @param GptAction $action
+     * 
+     * @return ModelResponse
+     */
+    public function run(GptAction $action): ModelResponse;
+
+    /**
+     * Create a training example for the given action.
+     *
+     * @param GptAction $action
      * 
      * @return void
      */
-    public function run(BaseChat $chat, ?Closure $streamChat = null): void;
+    public function training(GptAction $action): string;
 }

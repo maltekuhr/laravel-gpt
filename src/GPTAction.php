@@ -1,46 +1,46 @@
 <?php
 
 namespace MalteKuhr\LaravelGpt;
-use Closure;
-use MalteKuhr\LaravelGpt\Facades\FunctionManager;
-use MalteKuhr\LaravelGpt\Contracts\BaseChat;
-use MalteKuhr\LaravelGpt\Facades\ChatManager;
-use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
-use MalteKuhr\LaravelGpt\Enums\ChatRole;
-use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
+
+use MalteKuhr\LaravelGpt\Contracts\ConfidenceCalculator;
+use MalteKuhr\LaravelGpt\Facades\ActionManager;
+use MalteKuhr\LaravelGpt\Helper\Dir;
+use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
 use RuntimeException;
 
-abstract class GptAction extends BaseChat
+abstract class GptAction
 {
-    /**
-     * The function to be invoked by the model.
-     *
-     * @return Closure
-     */
-    abstract public function function(): Closure;
+    use Dir;
 
     /**
-     * The name of the function to be invoked by the model.
+     * The response from the model.
      *
-     * @return string
+     * @var array|null
      */
-    public function functionName(): string
-    {
-        return FunctionManager::getFunctionName($this, ['Gpt', 'Action']);
-    }
+    protected ?array $response = null;
 
     /**
-     * Get the description of what the function does.
+     * The confidence scores for the response.
      *
-     * @return string
+     * @var array|null
      */
-    public function description(): string
-    {
-        return 'The function you need to call.';
-    }
+    protected ?array $confidence = null;
 
     /**
-     * Get the rules for the function.
+     * Create a new GptAction instance.
+     *
+     * @param array $parts
+     * @param array $attributes
+     * @param array $meta
+     */
+    public function __construct(
+        protected array $parts,
+        protected array $attributes = [],
+        protected array $meta = []
+    ) {}
+
+    /**
+     * Define the validation rules for the response.
      *
      * @return array
      */
@@ -50,72 +50,127 @@ abstract class GptAction extends BaseChat
     }
 
     /**
-     * Define the functions available for this action.
-     *
-     * @return array
-     */
-    public function functions(): array
-    {
-        return [
-            new class($this) extends GptFunction {
-                public function __construct(
-                    private GptAction $action
-                ) {}
-
-                public function name(): string
-                {
-                    return $this->action->functionName();
-                }
-
-                public function description(): string
-                {
-                    return $this->action->description();
-                }
-
-                public function function(): Closure
-                {
-                    return $this->action->function();
-                }
-
-                public function rules(): array
-                {
-                    return $this->action->rules();
-                }
-            }
-        ];
-    }
-
-    /**
-     * Require the model to call a function.
-     *
-     * @return bool
-     */
-    public function functionCall(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Run the chat and get the response.
+     * Run the action.
      *
      * @throws RuntimeException
+     * @return self
+     */
+    public function run(int $tries = 3, bool $silent = false): self
+    {
+        ActionManager::run($this, $tries, $silent);
+
+        return $this;
+    }
+
+    /**
+     * Get the system message for the assistant.
+     * 
+     * @return string|null
+     */
+    public function systemMessage(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get the temperature for the response. (0 - 2)
+     * 
+     * @return ?float
+     */
+    public function temperature(): ?float
+    {
+        return null;
+    }
+
+    /**
+     * Get the maximum token limit per request.
+     * 
+     * @return int|null
+     */
+    public function maxTokens(): ?int
+    {
+        return null;
+    }
+
+    /**
+     * Get the model to be used for the request.
+     * 
+     * @return string
+     */
+    public function model(): string
+    {
+        return config('laravel-gpt.default_model');
+    }
+
+    /**
+     * Get the parts of the action.
+     *
      * @return array
      */
-    public function run(bool $sync = true): array
+    public function parts(): array
     {
-        $latestMessage = $this->getLatestMessage();
+        return $this->parts;
+    }
 
-        if (!$latestMessage || $latestMessage->role !== ChatRole::USER) {
-            throw new RuntimeException('The latest message must be from the user before running the chat.');
+    /**
+     * Get the confidence score using the provided calculator.
+     *
+     * @param ?ConfidenceCalculator $calculator = null
+     * @return ?int
+     */
+    public function confidence(?ConfidenceCalculator $calculator = null): ?int
+    {
+        if (!$this->confidence) {
+            return null;
         }
 
-        ChatManager::send($this, sync: $sync);
+        return min(100, max(0, $calculator?->confidence($this->confidence) ?? (int)round(array_sum($this->confidence) / count($this->confidence))));
+    }
 
-        $response = $this->getLatestMessage();
+    /**
+     * Get the attributes of the action.
+     *
+     * @return array
+     */
+    public function attributes(): array
+    {
+        return $this->attributes;
+    }
 
-        /* @var ChatFunctionCall $functionCall */
-        $functionCall = array_filter($response->parts, fn (ChatMessagePart $part) => $part instanceof ChatFunctionCall)[0];
+    /**
+     * Get the meta information of the action.
+     *
+     * @return array
+     */
+    public function meta(): array
+    {
+        return $this->meta;
+    }
 
-        return $functionCall->response;
+    /**
+     * Get the response for this action.
+     *
+     * @return ?array
+     */
+    public function response(): ?array
+    {
+        return $this->response;
+    }
+
+    /**
+     * Handle the response and confidence scores for this action.
+     *
+     * @param ModelResponse $response
+     * @return self
+     */
+    public function handleModelResponse(ModelResponse $response): self
+    {
+        $this->response = $response->result;
+        
+        if ($response->confidence !== null) {
+            $this->confidence = $response->confidence;
+        }
+
+        return $this;
     }
 }

@@ -6,3 +6,4 @@
 composer.lock
 phpunit.xml.bak
 .phpunit.result.cache
+/coverage

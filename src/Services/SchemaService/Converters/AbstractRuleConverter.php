@@ -71,9 +71,13 @@ abstract class AbstractRuleConverter
      * @return void
      * @throws FieldSetException
      */
-    public function setType(string $type, bool $override = false): void
+    public function setType(string $type, bool $override = false, bool $union = false): void
     {
-        $this->setField('type', $type, $override);
+        if ($union) {
+            $type = [$this->getType(), $type];
+        }
+
+        $this->setField('type', $type, $override || $union);
     }
 
 
@@ -105,9 +109,10 @@ abstract class AbstractRuleConverter
             throw FieldSetException::create($field);
         }
 
-        if (strtolower($this->schema['type'] ?? '') == 'array') {
+        $type = is_array($this->schema['type']) ? $this->schema['type'][0] : $this->schema['type'];
+        if (strtolower($type) == 'array') {
             $this->setRecursive($this->schema['items'], $field, $value);
-        } else if (strtolower($this->schema['type'] ?? '') == 'object') {
+        } else if (strtolower($type) == 'object') {
             $this->setRecursive($this->schema['properties'][$this->path], $field, $value);
         }
     }
@@ -142,7 +147,8 @@ abstract class AbstractRuleConverter
      */
     public function getField(string $field): mixed
     {
-        if (strtolower($this->schema['type'] ?? '') == 'array') {
+        $type = is_array($this->schema['type']) ? $this->schema['type'][0] : $this->schema['type'];
+        if (strtolower($type) == 'array') {
             return $this->getRecursive($this->schema['items'] ?? [], $field);
         } else {
             return $this->getRecursive($this->schema['properties'][$this->path] ?? [], $field);

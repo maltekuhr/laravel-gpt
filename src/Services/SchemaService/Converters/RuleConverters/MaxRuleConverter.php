@@ -25,6 +25,8 @@ class MaxRuleConverter extends AbstractRuleConverter
                     $this->addDescription("The string must not be longer than $value characters.");
                 } else if ($this->getType() == 'integer' | $this->getType() == 'number') {
                     $this->addDescription("The number must not be greater than $value.");
+                } else {
+                    throw new IncompatibleValidationRuleException($rule);
                 }
             }
         }

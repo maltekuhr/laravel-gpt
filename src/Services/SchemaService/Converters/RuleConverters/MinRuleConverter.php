@@ -25,6 +25,8 @@ class MinRuleConverter extends AbstractRuleConverter
                     $this->addDescription("The string must be at least $value characters long.");
                 } else if ($this->getType() == 'integer' | $this->getType() == 'number') {
                     $this->addDescription("The number must be at least $value.");
+                } else {
+                    throw new IncompatibleValidationRuleException($rule);
                 }
             }
         }

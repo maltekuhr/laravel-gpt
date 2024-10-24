@@ -5,6 +5,33 @@ namespace MalteKuhr\LaravelGpt\Services\SchemaService;
 use Illuminate\Support\Arr;
 use MalteKuhr\LaravelGpt\Exceptions\SchemaService\FieldSetException;
 use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AcceptedIfRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AcceptedRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AfterOrEqualRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AfterRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AlphaDashRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AlphaNumRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AlphaRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\ArrayRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AsciiRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\BeforeOrEqualRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\BeforeRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\BetweenRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\BooleanRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\DateRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\DecimalRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\EmailRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\EnumRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\FieldDescriptionRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\InRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\IntegerRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\MaxRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\MinRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\NotInRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\NullableRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\StringRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\UrlRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\RegexRuleConverter;
 
 class SchemaService
 {
@@ -17,6 +44,37 @@ class SchemaService
         'type' => 'object',
         'properties' => [],
         'required' => [],
+        'additionalProperties' => false,
+    ];
+
+    public static array $rules = [
+        AcceptedIfRuleConverter::class,
+        AcceptedRuleConverter::class,
+        AfterOrEqualRuleConverter::class,
+        AfterRuleConverter::class,
+        AlphaDashRuleConverter::class,
+        AlphaNumRuleConverter::class,
+        AlphaRuleConverter::class,
+        ArrayRuleConverter::class,
+        AsciiRuleConverter::class,
+        BeforeOrEqualRuleConverter::class,
+        BeforeRuleConverter::class,
+        BetweenRuleConverter::class,
+        BooleanRuleConverter::class,
+        DateRuleConverter::class,
+        DecimalRuleConverter::class,
+        EmailRuleConverter::class,
+        EnumRuleConverter::class,
+        FieldDescriptionRuleConverter::class,
+        InRuleConverter::class,
+        IntegerRuleConverter::class,
+        MaxRuleConverter::class,
+        MinRuleConverter::class,
+        NotInRuleConverter::class,
+        NullableRuleConverter::class,
+        StringRuleConverter::class,
+        UrlRuleConverter::class,
+        RegexRuleConverter::class,
     ];
 
     /**
@@ -57,6 +115,9 @@ class SchemaService
         if ($schemaType === SchemaType::OPEN_API) {
             $converter->schema = $converter->uppercaseTypes($converter->schema);
         }
+
+        $converter->schema['additionalProperties'] = false;
+        $converter->schema['required'] = array_unique(array_keys($converter->schema['properties']));
 
         return $converter->schema;
     }
@@ -118,6 +179,10 @@ class SchemaService
 
         $schema['type'] = $schemaType === SchemaType::OPEN_API ? strtoupper($type) : $type;
 
+        if ($type === 'object' && $schemaType === SchemaType::JSON) {
+            $schema['additionalProperties'] = false;
+        }
+
         return $schema;
     }
 
@@ -132,10 +197,17 @@ class SchemaService
      */
     private function processRules(array $schema, string $path, array $rules, SchemaType $schemaType): array
     {
-        $ruleClasses = collect(config('laravel-gpt.rules'))->sortByDesc(fn ($ruleClass) => $ruleClass::priority())->values();
+        $ruleClasses = collect(config('laravel-gpt.rules'))->merge(self::$rules)->sortByDesc(fn ($ruleClass) => $ruleClass::priority())->values();
 
         foreach ($ruleClasses as $ruleClass) {
             $schema = $ruleClass::run($schema, $path, $rules, $schemaType);
+        }
+
+        if (strtolower($schema['type']) === 'object') {
+            $schema['required'] = array_keys($schema['properties']);
+            if ($schemaType === SchemaType::JSON) {
+                $schema['additionalProperties'] = false;
+            }
         }
 
         return $schema;

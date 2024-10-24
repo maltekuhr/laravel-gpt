@@ -3,9 +3,9 @@
 namespace MalteKuhr\LaravelGpt\Services\SchemaService\CustomRules;
 
 use Closure;
-use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class FieldDescription implements Rule
+class FieldDescription implements ValidationRule
 {
     public function __construct(
         public readonly string $description
@@ -16,13 +16,11 @@ class FieldDescription implements Rule
         return new static($description);
     }
 
-    public function passes($attribute, $value)
+    /**
+     * Run the validation rule.
+     */
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        return true;
-    }
-
-    public function message()
-    {
-        return [];
+        // This rule doesn't actually validate anything, it's just used to add a description to the field
     }
 }

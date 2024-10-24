@@ -2,31 +2,24 @@
 
 namespace MalteKuhr\LaravelGpt\Drivers;
 
-use Closure;
-use MalteKuhr\LaravelGpt\Contracts\Driver;
-use MalteKuhr\LaravelGpt\Data\Message\ChatMessage;
-use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFile;
-use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFileUrl;
-use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatText;
-use MalteKuhr\LaravelGpt\Data\Message\Parts\ChatFunctionCall;
-use MalteKuhr\LaravelGpt\Enums\ChatRole;
-use MalteKuhr\LaravelGpt\Enums\SchemaType;
-use MalteKuhr\LaravelGpt\Exceptions\GptFunction\FunctionCallRequiresFunctionsException;
-use MalteKuhr\LaravelGpt\Exceptions\GptFunction\MissingFunctionException;
-use MalteKuhr\LaravelGpt\Facades\FunctionManager;
-use MalteKuhr\LaravelGpt\Contracts\BaseChat;
-use MalteKuhr\LaravelGpt\GptFunction;
-use Illuminate\Support\Arr;
-use OpenAI\Responses\StreamResponse;
-use MalteKuhr\LaravelGpt\GPTChat;
 use Exception;
-use OpenAI;
-use OpenAI\Client;
-use MalteKuhr\LaravelGpt\Contracts\ChatMessagePart;
+use MalteKuhr\LaravelGpt\Contracts\Driver;
+use MalteKuhr\LaravelGpt\Enums\SchemaType;
+use Illuminate\Support\Arr;
+use MalteKuhr\LaravelGpt\GptAction;
+use MalteKuhr\LaravelGpt\Contracts\InputPart;
+use MalteKuhr\LaravelGpt\Implementations\Parts\InputFile;
+use MalteKuhr\LaravelGpt\Implementations\Parts\InputText;
+use MalteKuhr\LaravelGpt\Services\SchemaService\SchemaService;
+use Illuminate\Support\Facades\Http;
+use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
+use Illuminate\Support\Facades\Log;
 
 class OpenAIDriver implements Driver
 {
-    private Client $client;
+    private string $apiKey;
+    private string $baseUrl;
+    private string $apiVersion;
 
     /**
      * Create a new OpenAIDriver instance.
@@ -36,299 +29,162 @@ class OpenAIDriver implements Driver
     public function __construct(
         private string $connection
     ) {
-        $this->createClient();
+        $this->initializeConnection();
     }
 
     /**
-     * Create the OpenAI client.
+     * Initialize the connection details.
      */
-    protected function createClient(): void
+    protected function initializeConnection(): void
     {
         $connection = config('laravel-gpt.connections.' . $this->connection);
         
         if ($connection['api'] === 'azure') {
-            $this->client = OpenAI::factory()
-                ->withBaseUri("{$connection['azure']['resource_name']}.openai.azure.com/openai/deployments/{$connection['azure']['deployment_id']}")
-                ->withHttpHeader('api-key', $connection['azure']['api_key'])
-                ->withQueryParam('api-version', $connection['azure']['api_version'])
-                ->make();
+            $this->baseUrl = "https://{$connection['azure']['resource_name']}.openai.azure.com/openai/deployments/{$connection['azure']['deployment_id']}/chat/completions?api-version={$connection['azure']['api_version']}";
+            $this->apiVersion = $connection['azure']['api_version'];
+        } else if ($connection['api'] === 'openai') {
+            $this->baseUrl = 'https://api.openai.com/v1/chat/completions';
+            $this->apiKey = $connection['openai']['api_key'];
         } else {
-            $this->client = OpenAI::client($connection['openai']['api_key']);
+            $provider = $connection['api'];
+            $this->baseUrl = $connection[$provider]['url'];
+            $this->apiKey = $connection[$provider]['api_key'];
         }
     }
 
     /**
-     * Run the chat and return the updated BaseChat instance.
+     * Run the action and return the response.
      *
-     * @param BaseChat $chat
-     * @param Closure|null $streamChat
-     * @return void
+     * @param GptAction $action
+     * @return ModelResponse
      */
-    public function run(BaseChat $chat, ?Closure $streamChat = null): void
+    public function run(GptAction $action): ModelResponse
     {
-        $payload = $this->generatePayload($chat);
+        // generate the payload for the request
+        $payload = $this->generatePayload($action);
         
-        $stream = $this->client->chat()->createStreamed($payload);
+        // send the request to the OpenAI compatible API
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$this->apiKey}",
+            'Content-Type' => 'application/json',
+        ])->post($this->baseUrl, $payload);
 
-        $this->handleResponse($chat, $stream, $streamChat);   
+        // check if the response is successful
+        if ($response->failed()) {
+            throw new Exception("API request failed: " . $response->body());
+        }
+
+        Log::info('OpenAI response', ['response' => $response->json()]);
+        dd($response->json());
+
+        // extract the result from the response
+        $result = $response->json('choices.0');
+
+        // extract the logprobs and convert them to a percentage
+        $logprobs = array_map(function ($logprob) {
+            return min(100, max(0, round(exp($logprob['logprob']) * 100, 2)));
+        }, $result['logprobs']['content']);
+
+        // check if the response is valid JSON
+        if ($this->isValidJson($content = $result['message']['content'])) {
+            return new ModelResponse(
+                result: json_decode($content, true),
+                confidence: $logprobs
+            );
+        }
+
+        throw new Exception("The response is not valid JSON.");
+    }
+
+    public function training(GptAction $action): string
+    {
+        $payload = $this->generatePayload($action);
+
+        return json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     /**
      * Generate the payload for the OpenAI API request.
      *
-     * @param BaseChat $chat
+     * @param GptAction $action
      * @return array
-     * @throws FunctionCallRequiresFunctionsException
-     * @throws MissingFunctionException
      */
-    protected function generatePayload(BaseChat $chat): array
+    public function generatePayload(GptAction $action): array
     {
-        $tools = $this->getTools($chat);
-
-        $model = $chat->model();
+        $model = $action->model();
         $version = config('laravel-gpt.models')[$model]['version'] ?? $model;
-
+        
         return array_filter([
             'model' => $version,
-            'messages' => $this->getMessages($chat),
-            'temperature' => $chat->temperature(),
-            'max_tokens' => $chat->maxTokens(),
-            ...(count($tools) > 0 ? [
-                'tools' => $tools,
-                'tool_choice' => $this->getToolChoice($chat),
-                'parallel_tool_calls' => $chat instanceof GptChat,
-            ] : []),
+            'messages' => $this->getMessages($action),
+            'temperature' => $action->temperature(),
+            'max_tokens' => $action->maxTokens(),
+            'response_format' => [
+                'type' => 'json_schema',
+                'json_schema' => $this->getJsonSchema($action),
+            ],
+            'logprobs' => true,
         ], fn ($value) => $value !== null);
     }
 
     /**
-     * Convert chat messages to OpenAI format.
+     * Convert input and system message to OpenAI format.
      *
-     * @param BaseChat $chat
+     * @param GptAction $action
      * @return array
      */
-    protected function getMessages(BaseChat $chat): array
+    protected function getMessages(GptAction $action): array
     {
         $messagesPayload = [];
 
         // add system message if it exists
-        if ($chat->systemMessage() !== null) {
+        if ($action->systemMessage() !== null) {
             $messagesPayload[] = [
                 'role' => 'system',
-                'content' => $chat->systemMessage(),
+                'content' => $action->systemMessage(),
             ];
         }
 
-        // add messages
-        foreach ($chat->getMessages() as $index => $message) {
-            if ($message->role === ChatRole::USER) {
-                $messagesPayload[] = [
-                    'role' => 'user',
-                    'content' => Arr::map($message->parts, fn (ChatMessagePart $part) => match (get_class($part)) {
-                        ChatText::class => [
-                            'type' => 'text',
-                            'text' => $part->text,
-                        ],
-                        ChatFile::class => [
-                            'type' => 'image_url',
-                            'image_url' => [
-                                'url' => $part instanceof ChatFile ? $part->getFileUrl() : null
-                            ]
-                        ],
-                        default => throw new Exception("The part type '".get_class($part)."' is not supported by the OpenAI driver."),
-                    }),
-                ];
-            } else {
-                $text = Arr::first($message->parts, fn (ChatMessagePart $part) => $part instanceof ChatText) ?? null;
-                $functionCalls = array_filter($message->parts, fn (ChatMessagePart $part) => $part instanceof ChatFunctionCall);
-
-                $messagesPayload[] = [
-                    'role' => 'assistant',
-                    'content' => $text?->text,
-                    'tool_calls' => count($functionCalls) > 0 ? Arr::map($functionCalls, fn (ChatFunctionCall $functionCall) => [
-                        'id' => $functionCall->id,
-                        'type' => 'function',
-                        'function' => [
-                            'name' => $functionCall->name,
-                            'strict' => true,
-                            'arguments' => json_encode($functionCall->arguments),
+        $messagesPayload[] = [
+            'role' => 'user',
+            'content' => Arr::map($action->parts(), function (InputPart $part) {
+                if ($part instanceof InputText) {
+                    return [
+                        'type' => 'text',
+                        'text' => $part->text,
+                    ];
+                } elseif ($part instanceof InputFile) {
+                    return [
+                        'type' => 'image_url',
+                        'image_url' => [
+                            'url' => $part->getFileUrl()
                         ]
-                    ]) : null,
-                ];
-
-
-                foreach ($functionCalls as $functionCall) {
-                    if ($functionCall->response !== null) {
-                        $messagesPayload[] = [
-                            'tool_call_id' => $functionCall->id,
-                            'role' => 'tool',
-                            'content' => json_encode($functionCall->response),
-                        ];
-                    }
+                    ];
+                } else {
+                    throw new Exception("The part type '" . get_class($part) . "' is not supported by the OpenAI driver.");
                 }
-            }
-        }
+            }),
+        ];
 
         return $messagesPayload;
     }
 
     /**
-     * Get the tools for the OpenAI API request.
+     * Get the json schema for the OpenAI API request.
      *
-     * @param BaseChat $chat
-     * @return array|null
+     * @param GptAction $action
+     * @return array
      */
-    protected function getTools(BaseChat $chat): ?array
+    protected function getJsonSchema(GptAction $action): array
     {
-        if ($chat->functions() === null) {
-            return null;
-        }
+        $schema = SchemaService::convert($action->rules(), SchemaType::JSON);
+        $hash = substr(hash('sha256', json_encode($schema)), 0, 8);
 
-        return array_map(function (GptFunction $function): array {
-            return [
-                'type' => 'function',
-                'function' => FunctionManager::docs($function, SchemaType::JSON)
-            ];
-        }, $chat->functions());
-    }
-
-    /**
-     * Get the tool choice for the OpenAI API request.
-     *
-     * @param BaseChat $chat
-     * @return string|array|null
-     * @throws MissingFunctionException
-     * @throws FunctionCallRequiresFunctionsException
-     */
-    protected function getToolChoice(BaseChat $chat): string|array|null
-    {
-        if ($chat->functionCall() === null) {
-            return 'auto';
-        }
-
-        if (is_array($chat->functionCall())) {
-            throw new Exception("The function call is an array. This is not supported by the OpenAI driver.");
-        }
-
-        if (is_subclass_of($chat->functionCall(), GptFunction::class)) {
-            $function = Arr::first(
-                array: $chat->functions(),
-                callback: fn (GptFunction $function) => $function instanceof ($chat->functionCall())
-            );
-
-            if ($function === null) {
-                throw MissingFunctionException::create($chat->functionCall(), get_class($chat));
-            }
-
-            return [
-                'type' => 'function',
-                'function' => ['name' => $function->name()],
-            ];
-        }
-
-        if ($chat->functionCall() && $chat->functions() === null) {
-            throw FunctionCallRequiresFunctionsException::create();
-        }
-
-        return $chat->functionCall() ? 'required' : 'none';
-    }
-
-    /**
-     * Handle the response from the OpenAI API.
-     *
-     * @param BaseChat $chat
-     * @param StreamResponse $stream
-     * @param Closure|null $streamChat
-     * @return void
-     */
-    protected function handleResponse(BaseChat $chat, StreamResponse $stream, ?Closure $streamChat = null): void
-    {
-        $messages = $chat->getMessages();
-        $message = new ChatMessage(
-            role: ChatRole::ASSISTANT, 
-            parts: []
-        );
-        
-        $currentPart = null;
-        $contentLastChangedAt = 0;
-        $functionArgumentsBuffer = '';
-
-        foreach ($stream as $response) {
-            $delta = $response['choices'][0]['delta'];
-            
-            if (isset($delta['content'])) {
-                if ($currentPart instanceof ChatText) {
-                    $currentPart = new ChatText($currentPart->text . $delta['content']);
-                } else {
-                    if ($currentPart !== null) {
-                        $message = $message->addPart($currentPart);
-                    }
-                    $currentPart = new ChatText($delta['content']);
-                }
-                
-                // update chat message every 250 ms
-                if (microtime(true) - $contentLastChangedAt >= 0.1 && $currentPart->text != '') {
-                    $contentLastChangedAt = microtime(true);
-                    $chat->addMessage($message->addPart($currentPart));
-                    if ($streamChat !== null) {
-                        $streamChat($chat);
-                    }
-                }
-            }
-            
-            if (isset($delta['tool_calls'])) {
-                foreach ($delta['tool_calls'] as $toolCall) {
-                    $id = $toolCall['id'] ?? ($currentPart instanceof ChatFunctionCall ? $currentPart->id : null);
-                    
-                    // Check if ID has changed
-                    if (!is_null($currentPart) && (!($currentPart instanceof ChatFunctionCall) || $id !== $currentPart->id)) {
-                        $message = $message->addPart($currentPart);
-                        $chat->addMessage($message);
-                        
-                        if ($streamChat !== null) {
-                            $streamChat($chat);
-                        }
-
-                        $currentPart = null;
-                        $functionArgumentsBuffer = '';
-                    }
-                    
-                    if ($currentPart === null || !($currentPart instanceof ChatFunctionCall)) {
-                        $functionArgumentsBuffer = $toolCall['function']['arguments'] ?? '';
-                        $currentPart = new ChatFunctionCall(
-                            id: $id,
-                            name: $toolCall['function']['name'] ?? '',
-                            arguments: []
-                        );
-                    } else {
-                        $functionArgumentsBuffer .= $toolCall['function']['arguments'] ?? '';
-                        $currentPart = new ChatFunctionCall(
-                            id: $currentPart->id,
-                            name: $toolCall['function']['name'] ?? $currentPart->name,
-                            arguments: $currentPart->arguments
-                        );
-                    }
-
-                    // Try to parse the JSON when it's complete
-                    if ($this->isValidJson($functionArgumentsBuffer)) {
-                        $parsedArguments = json_decode($functionArgumentsBuffer, true);
-                        $currentPart = new ChatFunctionCall(
-                            id: $currentPart->id,
-                            name: $currentPart->name,
-                            arguments: $parsedArguments
-                        );
-                        $functionArgumentsBuffer = '';
-                    }
-                }
-            }
-        }
-        
-        // Add the last part if it exists
-        if ($currentPart !== null) {
-            $message = $message->addPart($currentPart);
-            $chat->addMessage($message);
-            $streamChat($chat);
-        }
+        return [
+            'name' => $hash,
+            'schema' => $schema,
+            'strict' => true,
+        ];
     }
 
     /**
