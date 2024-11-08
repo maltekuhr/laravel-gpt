@@ -114,10 +114,12 @@ class SchemaService
 
         if ($schemaType === SchemaType::OPEN_API) {
             $converter->schema = $converter->uppercaseTypes($converter->schema);
+            unset($converter->schema['additionalProperties']);
+        } else {
+            $converter->schema['additionalProperties'] = false;
+            $converter->schema['required'] = array_unique(array_keys($converter->schema['properties']));        
         }
 
-        $converter->schema['additionalProperties'] = false;
-        $converter->schema['required'] = array_unique(array_keys($converter->schema['properties']));
 
         return $converter->schema;
     }
@@ -205,6 +207,7 @@ class SchemaService
 
         if (strtolower($schema['type']) === 'object') {
             $schema['required'] = array_keys($schema['properties']);
+
             if ($schemaType === SchemaType::JSON) {
                 $schema['additionalProperties'] = false;
             }
@@ -222,7 +225,11 @@ class SchemaService
     private function uppercaseTypes(array $schema): array
     {
         if (isset($schema['type'])) {
-            $schema['type'] = strtoupper($schema['type']);
+            if (is_array($schema['type'])) {
+                $schema['type'] = array_map(fn ($type) => strtoupper($type), $schema['type']);
+            } else {
+                $schema['type'] = strtoupper($schema['type']);
+            }
         }
 
         if (isset($schema['properties']) && is_array($schema['properties'])) {

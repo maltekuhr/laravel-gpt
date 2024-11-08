@@ -3,7 +3,7 @@
 namespace MalteKuhr\LaravelGpt\Contracts;
 
 use MalteKuhr\LaravelGpt\GptAction;
-use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
+use MalteKuhr\LaravelGpt\Data\ModelResponse;
 
 interface Driver
 {
@@ -28,7 +28,7 @@ interface Driver
      *
      * @param GptAction $action
      * 
-     * @return void
+     * @return ?string
      */
-    public function training(GptAction $action): string;
+    public function training(GptAction $action): ?string;
 }

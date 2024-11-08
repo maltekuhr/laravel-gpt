@@ -66,6 +66,14 @@ class BasicTest extends TestCase
                     'end' => 26
                 ]
             ],
+            'complex nested structure 2' => [
+                'json' => '{"title":"This is a title",   "description":{"content":[{"type":"text","lines":["This is a test line!"]}]}}',
+                'path' => 'description',
+                'expectedResult' => [
+                    'start' => 44,
+                    'end' => 106
+                ]
+            ],
             'complex nested structure with array' => [
                 'json' => '{"test":[{"test"    :"test"},{"test":"test"},   {"test2":"test"}],"test2":[{"a":"test  123","b":2,"0":["test"]},{"test":"test"},{"a":"test123","b":2}],"test3":{"number":123,"string":"test"}}',
                 'path' => 'test2.0.0.0',
@@ -109,6 +117,14 @@ class BasicTest extends TestCase
                 'expectedResult' => [
                     'start' => 29,
                     'end' => 47
+                ]
+            ],
+            'object with null value' => [
+                'json' => '{"einheit": "St", "intervall": null}',
+                'path' => 'intervall',
+                'expectedResult' => [
+                    'start' => 31,
+                    'end' => 35
                 ]
             ]
         ];

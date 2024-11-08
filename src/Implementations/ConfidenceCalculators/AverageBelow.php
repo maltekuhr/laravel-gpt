@@ -3,6 +3,7 @@
 namespace MalteKuhr\LaravelGpt\Implementations\ConfidenceCalculators;
 
 use MalteKuhr\LaravelGpt\Contracts\ConfidenceCalculator;
+use MalteKuhr\LaravelGpt\Data\TokenConfidence;
 
 class AverageBelow implements ConfidenceCalculator
 {
@@ -16,16 +17,18 @@ class AverageBelow implements ConfidenceCalculator
     /**
      * Return the confidence score.
      *
-     * @param array $confidenceScores
+     * @param TokenConfidence[] $tokens
      * @return int Number between 0 and 100
      */
-    public function confidence(array $confidenceScores): int
+    public function confidence(array $tokens): int
     {
-        if (empty($confidenceScores)) {
+        if (empty($tokens)) {
             return 0;
         }
 
+        $confidenceScores = array_map(fn (TokenConfidence $token) => $token->confidence, $tokens);
         sort($confidenceScores);
+        
         $threshold = $confidenceScores[(int)floor(count($confidenceScores) * $this->percentile / 100)];
         
         $validScores = array_filter($confidenceScores, fn ($score) => $score <= $threshold);

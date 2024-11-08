@@ -3,6 +3,7 @@
 namespace MalteKuhr\LaravelGpt\Services\JsonPathFinderService;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class JsonPathFinderService
 {
@@ -82,7 +83,7 @@ class JsonPathFinderService
      */
     private function determineStringPosition(string $rawJson, string $path, array $decoded): ?array
     {
-        $value = json_encode(Arr::get($decoded, $path));
+        $value = json_encode(Arr::get($decoded, $path), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($value === null) {
             return null;
         }
@@ -116,11 +117,21 @@ class JsonPathFinderService
         $matches = [];
 
         if ($parentIsAssoc) {
-            $pattern = '/"' . preg_quote($key, '/') . '"\s*:\s*' . preg_quote($value, '/') . '/';
-            preg_match_all($pattern, $rawJson, $matchResults, PREG_OFFSET_CAPTURE);
+            if (Str::contains($value, "{")) {
+                $detectValue = Str::random(strlen($value));
+                $detectJson = str_replace($value, $detectValue, $rawJson);
+                $detectKey = $key == $value ? $detectValue : $key;
+            } else {
+                $detectJson = $rawJson;
+                $detectValue = $value;
+                $detectKey = $key;
+            }
+
+            $pattern = '/"' . preg_quote($detectKey, '/') . '"\s*:\s*' . preg_quote($detectValue, '/') . '/';
+            preg_match_all($pattern, $detectJson, $matchResults, PREG_OFFSET_CAPTURE);
 
             foreach ($matchResults[0] as $match) {
-                $matchedValue = $match[0];
+                $matchedValue = $detectValue === $value ? $match[0] : str_replace($detectValue, $value, $match[0]);
                 $processedValue = substr($matchedValue, strpos($matchedValue, ':') + 1);
                 $processedValue = trim($processedValue);
                 $isString = substr($processedValue, 0, 1) === '"' && substr($processedValue, -1) === '"';
@@ -174,7 +185,7 @@ class JsonPathFinderService
                 $onPath = true;
             }
 
-            if (json_encode($item) == $value && ((!$parentIsAssoc && !Arr::isAssoc($array)) || $key == $originalKey)) {
+            if (json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) == $value && ((!$parentIsAssoc && !Arr::isAssoc($array)) || $key == $originalKey)) {
                 $matches++;
             } else if (is_array($item)) {
                 if ($onPath) {

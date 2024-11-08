@@ -155,4 +155,17 @@ return [
         // custom rule converters
         // AcceptedIfRuleConverter::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Verbose Mode
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, this setting will cause the package to log detailed information
+    | about API requests and responses. This can be helpful for debugging but
+    | should typically be disabled in production environments.
+    |
+    */
+
+    'verbose' => env('APP_DEBUG', false),
 ];

@@ -22,6 +22,10 @@ class NullableRuleConverterTest extends RuleConverterTestCase
                  'integer|nullable',
                  TestSchema::make()->set('type', ['integer', 'null']),
             ],
+            [
+                'in:a,b|nullable',
+                TestSchema::make()->set('type', ['string', 'null'])->set('enum', ['a', 'b', null]),
+            ],
         ];
     }
 }

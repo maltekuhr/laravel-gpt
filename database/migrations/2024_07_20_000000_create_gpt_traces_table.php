@@ -13,11 +13,10 @@ return new class extends Migration {
             $table->string('class');
 
             $table->json('input');
-            $table->json('output');
+            $table->json('model_response');
 
             $table->json('meta')->nullable();
             $table->json('attributes')->nullable();
-            $table->json('confidence')->nullable();
 
             $table->softDeletes();
             $table->timestamps();

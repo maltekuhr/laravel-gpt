@@ -103,6 +103,16 @@ class InputFile implements InputPart
     }
 
     /**
+     * Get the file content. (Base64 encoded)
+     *
+     * @return string
+     */
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+
+    /**
      * Get the MIME type of the file.
      *
      * @return string

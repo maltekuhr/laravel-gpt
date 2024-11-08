@@ -4,27 +4,13 @@ namespace MalteKuhr\LaravelGpt;
 
 use MalteKuhr\LaravelGpt\Contracts\ConfidenceCalculator;
 use MalteKuhr\LaravelGpt\Facades\ActionManager;
+use MalteKuhr\LaravelGpt\Data\ModelResponse;
 use MalteKuhr\LaravelGpt\Helper\Dir;
-use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
 use RuntimeException;
 
 abstract class GptAction
 {
     use Dir;
-
-    /**
-     * The response from the model.
-     *
-     * @var array|null
-     */
-    protected ?array $response = null;
-
-    /**
-     * The confidence scores for the response.
-     *
-     * @var array|null
-     */
-    protected ?array $confidence = null;
 
     /**
      * Create a new GptAction instance.
@@ -36,7 +22,8 @@ abstract class GptAction
     public function __construct(
         protected array $parts,
         protected array $attributes = [],
-        protected array $meta = []
+        protected array $meta = [],
+        protected ?ModelResponse $response = null
     ) {}
 
     /**
@@ -114,17 +101,22 @@ abstract class GptAction
 
     /**
      * Get the confidence score using the provided calculator.
+     * 
+     * You can provide a $path for which the confidence score 
+     * should be calculated. The path should be a dot separated
+     * string that describes the path to the value in the response.
      *
+     * @param ?string $path
      * @param ?ConfidenceCalculator $calculator = null
      * @return ?int
      */
-    public function confidence(?ConfidenceCalculator $calculator = null): ?int
+    public function confidence(?string $path = null, ?ConfidenceCalculator $calculator = null): ?int
     {
-        if (!$this->confidence) {
+        if (is_null($this->response)) {
             return null;
         }
 
-        return min(100, max(0, $calculator?->confidence($this->confidence) ?? (int)round(array_sum($this->confidence) / count($this->confidence))));
+        return $this->response->confidence($path, $calculator);
     }
 
     /**
@@ -148,29 +140,24 @@ abstract class GptAction
     }
 
     /**
-     * Get the response for this action.
+     * Get the output for this action.
      *
      * @return ?array
      */
-    public function response(): ?array
+    public function output(): ?array
     {
-        return $this->response;
+        return $this->response?->output();
     }
 
     /**
-     * Handle the response and confidence scores for this action.
+     * Set the response for this action.
      *
      * @param ModelResponse $response
      * @return self
      */
-    public function handleModelResponse(ModelResponse $response): self
+    public function setResponse(ModelResponse $response): self
     {
-        $this->response = $response->result;
-        
-        if ($response->confidence !== null) {
-            $this->confidence = $response->confidence;
-        }
-
+        $this->response = $response;
         return $this;
     }
 }

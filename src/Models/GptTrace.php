@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use MalteKuhr\LaravelGpt\Contracts\InputPart;
 use MalteKuhr\LaravelGpt\GptAction;
-use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
+use MalteKuhr\LaravelGpt\Data\ModelResponse;
 
 class GptTrace extends Model
 {
@@ -16,10 +16,9 @@ class GptTrace extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'output' => 'array',
         'meta' => 'array',
         'attributes' => 'array',
-        'confidence' => 'array',
+        'model_response' => 'array',
     ];
 
     /**
@@ -70,10 +69,9 @@ class GptTrace extends Model
         return self::create([
             'class' => get_class($action),
             'input' => $action->parts(),
-            'output' => $response->result,
+            'model_response' => $response->toArray(),
             'meta' => $action->meta(),
-            'attributes' => $action->attributes(),
-            'confidence' => $response->confidence,
+            'attributes' => $action->attributes()
         ]);
     }
 
@@ -89,6 +87,6 @@ class GptTrace extends Model
             return null;
         }
 
-        return $actionClass::make($this->input, $this->attributes, $this->meta);
+        return $actionClass::make($this->input, $this->attributes, $this->meta, ModelResponse::fromArray($this->model_response));
     }
 }

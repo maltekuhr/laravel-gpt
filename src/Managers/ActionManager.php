@@ -59,15 +59,15 @@ class ActionManager
                 $trace = GptTrace::trace($action, $response);
             }
 
-            if ($this->validate($action, $trace ?? null, $response->result, throw: $try === $tries - 1)) {
+            if ($this->validate($action, $trace ?? null, $response->output(), throw: $try === $tries - 1)) {
                 break;
             }
         }
 
         // save response 
-        $action->handleModelResponse($response);
+        $action->setResponse($response);
 
-        return $response->result;
+        return $response->output();
     }
 
     /**

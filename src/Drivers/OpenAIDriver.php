@@ -12,14 +12,15 @@ use MalteKuhr\LaravelGpt\Implementations\Parts\InputFile;
 use MalteKuhr\LaravelGpt\Implementations\Parts\InputText;
 use MalteKuhr\LaravelGpt\Services\SchemaService\SchemaService;
 use Illuminate\Support\Facades\Http;
-use MalteKuhr\LaravelGpt\Contracts\ModelResponse;
+use MalteKuhr\LaravelGpt\Data\ModelResponse;
 use Illuminate\Support\Facades\Log;
+use MalteKuhr\LaravelGpt\Data\TokenConfidence;
+use Illuminate\Support\Str;
 
 class OpenAIDriver implements Driver
 {
     private string $apiKey;
     private string $baseUrl;
-    private string $apiVersion;
 
     /**
      * Create a new OpenAIDriver instance.
@@ -41,7 +42,6 @@ class OpenAIDriver implements Driver
         
         if ($connection['api'] === 'azure') {
             $this->baseUrl = "https://{$connection['azure']['resource_name']}.openai.azure.com/openai/deployments/{$connection['azure']['deployment_id']}/chat/completions?api-version={$connection['azure']['api_version']}";
-            $this->apiVersion = $connection['azure']['api_version'];
         } else if ($connection['api'] === 'openai') {
             $this->baseUrl = 'https://api.openai.com/v1/chat/completions';
             $this->apiKey = $connection['openai']['api_key'];
@@ -62,6 +62,14 @@ class OpenAIDriver implements Driver
     {
         // generate the payload for the request
         $payload = $this->generatePayload($action);
+
+        // generate a unique identifier for the request
+        $uuid = Str::uuid();
+
+        // log the payload if verbose mode is enabled
+        if (config('laravel-gpt.verbose')) {
+            Log::info('OpenAI API request (' . $uuid . ')', ['payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
+        }
         
         // send the request to the OpenAI compatible API
         $response = Http::withHeaders([
@@ -71,25 +79,35 @@ class OpenAIDriver implements Driver
 
         // check if the response is successful
         if ($response->failed()) {
-            throw new Exception("API request failed: " . $response->body());
+            throw new Exception("OpenAIAPI request failed: " . $response->body());
         }
 
-        Log::info('OpenAI response', ['response' => $response->json()]);
-        dd($response->json());
+        // log the response if verbose mode is enabled
+        if (config('laravel-gpt.verbose')) {
+            Log::info('OpenAI API response (' . $uuid . ')', [
+                'url' => $this->baseUrl,
+                'status' => $response->status(),
+                'data' => json_encode($response->json(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            ]);
+        }
 
         // extract the result from the response
         $result = $response->json('choices.0');
 
         // extract the logprobs and convert them to a percentage
         $logprobs = array_map(function ($logprob) {
-            return min(100, max(0, round(exp($logprob['logprob']) * 100, 2)));
+            return TokenConfidence::make(
+                token: $logprob['token'], 
+                confidence: min(100, max(0, round(exp($logprob['logprob']) * 100, 2)))
+            );
         }, $result['logprobs']['content']);
 
         // check if the response is valid JSON
         if ($this->isValidJson($content = $result['message']['content'])) {
             return new ModelResponse(
-                result: json_decode($content, true),
-                confidence: $logprobs
+                output: $content,
+                confidence: $logprobs,
+                uuid: $uuid
             );
         }
 
