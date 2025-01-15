@@ -80,7 +80,7 @@ class OpenAIDriver implements Driver
         // check if the response is successful
         if ($response->failed()) {
             throw new Exception(sprintf(
-                "OpenAI API request failed: %s\nPayload: %s\nResponse: %s",
+                "OpenAI API request failed: %s\nPayload: %s",
                 json_encode($response->json()),
                 json_encode($payload)
             ));
