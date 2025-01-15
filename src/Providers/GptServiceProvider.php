@@ -3,6 +3,8 @@
 namespace MalteKuhr\LaravelGpt\Providers;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use MalteKuhr\LaravelGpt\Commands\CombineTrainingDataCommand;
+use MalteKuhr\LaravelGpt\Commands\ExportTrainingDataCommand;
 use MalteKuhr\LaravelGpt\Commands\Make\GptActionMakeCommand;
 use MalteKuhr\LaravelGpt\Commands\Make\RuleConverterMakeCommand;
 use MalteKuhr\LaravelGpt\Drivers\OpenAIDriver;
@@ -48,7 +50,9 @@ class GptServiceProvider extends BaseServiceProvider
 
             $this->commands([
                 GptActionMakeCommand::class,
-                RuleConverterMakeCommand::class
+                RuleConverterMakeCommand::class,
+                ExportTrainingDataCommand::class,
+                CombineTrainingDataCommand::class
             ]);
         }
     }

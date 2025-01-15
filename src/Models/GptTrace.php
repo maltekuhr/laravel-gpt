@@ -52,7 +52,10 @@ class GptTrace extends Model
                 return $className::fromArray($part);
             }, json_decode($value, true)),
             set: fn ($value) => json_encode(array_map(function (InputPart $part) {
-                return $part->toArray();
+                return [
+                    ...$part->toArray(),
+                    'type' => strtolower(str_replace('Input', '', class_basename(get_class($part))))
+                ];
             }, $value))
         );
     }
@@ -87,6 +90,6 @@ class GptTrace extends Model
             return null;
         }
 
-        return $actionClass::make($this->input, $this->attributes, $this->meta, ModelResponse::fromArray($this->model_response));
+        return new $actionClass($this->input, $this->getAttribute('attributes'), $this->meta, ModelResponse::fromArray($this->model_response));
     }
 }

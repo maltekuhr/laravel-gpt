@@ -107,7 +107,7 @@ class GeminiDriver implements Driver
         );
     }
 
-    public function training(GptAction $action): ?string
+    public function training(GptAction $action): ?array
     {
         return null;
     }
@@ -132,7 +132,7 @@ class GeminiDriver implements Driver
                 'maxOutputTokens' => $action->maxTokens(),
                 'responseSchema' => SchemaService::convert($action->rules(), SchemaType::OPEN_API),
                 'responseMimeType' => 'application/json',
-                'responseLogprobs' => true,
+                // 'responseLogprobs' => true,
             ],
 
         ];

@@ -32,6 +32,8 @@ use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\Nullab
 use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\StringRuleConverter;
 use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\UrlRuleConverter;
 use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\RegexRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\AnyOfRuleConverter;
+use MalteKuhr\LaravelGpt\Services\SchemaService\Converters\RuleConverters\NumericRuleConverter;
 
 class SchemaService
 {
@@ -75,6 +77,8 @@ class SchemaService
         StringRuleConverter::class,
         UrlRuleConverter::class,
         RegexRuleConverter::class,
+        AnyOfRuleConverter::class,
+        NumericRuleConverter::class,
     ];
 
     /**
@@ -141,7 +145,7 @@ class SchemaService
         }
 
         // get reference to children schema path
-        if (mb_strtolower($schema['type']) == 'object') {
+        if (is_string($schema['type']) ? mb_strtolower($schema['type']) == 'object' : in_array('object', array_map('mb_strtolower', $schema['type']))) {
             $schemaRef = &$schema['properties'][$path[0]];
         } else {
             $schemaRef = &$schema['items'];
@@ -175,11 +179,24 @@ class SchemaService
      */
     protected function setSchemaType(array $schema, string $type, SchemaType $schemaType): array
     {
-        if (isset($schema['type']) && strtolower($schema['type']) != strtolower($type)) {
+        $newType = $schemaType === SchemaType::OPEN_API ? strtoupper($type) : $type;
+        $lowerNewType = mb_strtolower($newType);
+        $lowerType = is_array($schema['type'] ?? null) ? array_map('mb_strtolower', $schema['type']) : mb_strtolower($schema['type'] ?? null);
+
+        if (is_array($schema['type'] ?? null) && in_array($lowerNewType, $lowerType)) {
+            return $schema;
+        }
+
+        if (!is_array($schema['type'] ?? null) && strtolower($schema['type'] ?? $newType) != strtolower($newType)) {
             throw FieldSetException::create('type');
         }
 
-        $schema['type'] = $schemaType === SchemaType::OPEN_API ? strtoupper($type) : $type;
+        if (is_array($schema['type'] ?? null) && in_array('null', $lowerType)) {
+            $nullType = $schemaType === SchemaType::OPEN_API ? 'NULL' : 'null';
+            $newType = [$newType, $nullType];
+        }
+
+        $schema['type'] = $newType;
 
         if ($type === 'object' && $schemaType === SchemaType::JSON) {
             $schema['additionalProperties'] = false;
@@ -205,11 +222,13 @@ class SchemaService
             $schema = $ruleClass::run($schema, $path, $rules, $schemaType);
         }
 
-        if (strtolower($schema['type']) === 'object') {
-            $schema['required'] = array_keys($schema['properties']);
+        foreach (is_array($schema['type'] ?? null) ? $schema['type'] : [$schema['type']] as $type) {
+            if (strtolower($type) === 'object') {
+                $schema['required'] = array_keys($schema['properties']);
 
-            if ($schemaType === SchemaType::JSON) {
-                $schema['additionalProperties'] = false;
+                if ($schemaType === SchemaType::JSON) {
+                    $schema['additionalProperties'] = false;
+                }
             }
         }
 

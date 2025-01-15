@@ -72,7 +72,7 @@ class OpenAIDriver implements Driver
         }
         
         // send the request to the OpenAI compatible API
-        $response = Http::withHeaders([
+        $response = Http::timeout(120)->withHeaders([
             'Authorization' => "Bearer {$this->apiKey}",
             'Content-Type' => 'application/json',
         ])->post($this->baseUrl, $payload);
@@ -114,11 +114,11 @@ class OpenAIDriver implements Driver
         throw new Exception("The response is not valid JSON.");
     }
 
-    public function training(GptAction $action): string
+    public function training(GptAction $action): array
     {
-        $payload = $this->generatePayload($action);
+        $payload = $this->generatePayload($action, training: true);
 
-        return json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return $payload;
     }
 
     /**
@@ -127,21 +127,23 @@ class OpenAIDriver implements Driver
      * @param GptAction $action
      * @return array
      */
-    public function generatePayload(GptAction $action): array
+    public function generatePayload(GptAction $action, bool $training = false): array
     {
         $model = $action->model();
         $version = config('laravel-gpt.models')[$model]['version'] ?? $model;
         
         return array_filter([
-            'model' => $version,
-            'messages' => $this->getMessages($action),
-            'temperature' => $action->temperature(),
-            'max_tokens' => $action->maxTokens(),
-            'response_format' => [
-                'type' => 'json_schema',
-                'json_schema' => $this->getJsonSchema($action),
-            ],
-            'logprobs' => true,
+            'messages' => $this->getMessages($action, training: $training),
+            ...(!$training ? [
+                'temperature' => $action->temperature(),
+                'response_format' => [
+                    'type' => 'json_schema',
+                    'json_schema' => $this->getJsonSchema($action),
+                ],
+                'model' => $version,
+                'max_tokens' => $action->maxTokens(),
+                'logprobs' => true,
+            ] : []),
         ], fn ($value) => $value !== null);
     }
 
@@ -151,7 +153,7 @@ class OpenAIDriver implements Driver
      * @param GptAction $action
      * @return array
      */
-    protected function getMessages(GptAction $action): array
+    protected function getMessages(GptAction $action, bool $training = false): array
     {
         $messagesPayload = [];
 
@@ -165,7 +167,7 @@ class OpenAIDriver implements Driver
 
         $messagesPayload[] = [
             'role' => 'user',
-            'content' => Arr::map($action->parts(), function (InputPart $part) {
+            'content' => Arr::map($action->parts(), function (InputPart $part) use ($training) {
                 if ($part instanceof InputText) {
                     return [
                         'type' => 'text',
@@ -175,7 +177,7 @@ class OpenAIDriver implements Driver
                     return [
                         'type' => 'image_url',
                         'image_url' => [
-                            'url' => $part->getFileUrl()
+                            'url' => $training ? "data:{$part->getMimeType()};base64,{$part->getContent()}" : $part->getFileUrl()
                         ]
                     ];
                 } else {
@@ -183,6 +185,13 @@ class OpenAIDriver implements Driver
                 }
             }),
         ];
+
+        if ($training) {
+            $messagesPayload[] = [
+                'role' => 'assistant',
+                'content' => $action->output(),
+            ];
+        }
 
         return $messagesPayload;
     }

@@ -160,4 +160,36 @@ abstract class GptAction
         $this->response = $response;
         return $this;
     }
+
+    /**
+     * Generate a unique SHA-256 hash for this action.
+     * 
+     * This hash is used for caching purposes and uniquely identifies the action
+     * based on its serialized state, system message, model and validation rules.
+     *
+     * @return string The SHA-256 hash of the action
+     */
+    public function sha(): string
+    {
+        return hash('sha256', json_encode([
+            'action' => serialize($this),
+            'system_message' => $this->systemMessage(),
+            'model' => $this->model(),
+            'rules' => $this->rules(),
+            'config' => config('laravel-gpt')
+        ]));
+    }
+
+    /**
+     * Get the trace ID associated with this action's response.
+     * 
+     * The trace ID is used to link the action to its execution trace in the database.
+     * Returns null if no response has been set yet.
+     *
+     * @return int|null The trace ID or null if no response exists
+     */
+    public function traceId(): ?int
+    {
+        return $this->response?->traceId;
+    }
 }

@@ -11,11 +11,7 @@ class EmailRuleConverter extends AbstractRuleConverter
     {
         if (in_array('email', $this->rules)) {
             $this->setType('string');
-            if ($this->schemaType === SchemaType::OPEN_API) {
-                $this->addDescription('Format: email@example.com.');
-            } else {
-                $this->setField('format', 'email');
-            }
+            $this->addDescription('Format: email@example.com.');
         }
     }
 }

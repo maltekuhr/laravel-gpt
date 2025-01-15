@@ -2,6 +2,7 @@
 
 namespace MalteKuhr\LaravelGpt\Contracts;
 
+use Illuminate\Support\Arr;
 use MalteKuhr\LaravelGpt\GptAction;
 use MalteKuhr\LaravelGpt\Data\ModelResponse;
 
@@ -28,7 +29,7 @@ interface Driver
      *
      * @param GptAction $action
      * 
-     * @return ?string
+     * @return ?array
      */
-    public function training(GptAction $action): ?string;
+    public function training(GptAction $action): ?array;
 }

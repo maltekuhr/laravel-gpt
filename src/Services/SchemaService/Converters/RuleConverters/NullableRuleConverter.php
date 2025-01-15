@@ -21,9 +21,9 @@ class NullableRuleConverter extends AbstractRuleConverter
                     $this->setField('enum', [...$enum, null], override: true);
                 }
 
+         
                 $this->setType('null', union: true);
             } 
-
         }
     }
 }

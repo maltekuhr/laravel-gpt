@@ -23,12 +23,7 @@ class BeforeOrEqualRuleConverter extends AbstractRuleConverter
                 }
 
                 $this->setType('string');
-
-                if ($this->schemaType === SchemaType::OPEN_API) {
-                    $this->addDescription('Format: YYYY-MM-DD (2024-01-01).');
-                } else {
-                    $this->setField('format', 'date');
-                }
+                $this->addDescription('Format: YYYY-MM-DD (2024-01-01).');
 
                 $this->addDescription('Must be a date before or equal to ' . date('Y-m-d', $date) . '.');
             }

@@ -36,9 +36,9 @@ class InputFile implements InputPart
      * @param string $path
      * @return static
      */
-    public static function fromDisk(string $path): static
+    public static function fromDisk(string $path, ?string $disk = null): static
     {
-        $disk = Storage::disk(config('laravel-gpt.disk.name'));
+        $disk = Storage::disk($disk ?? config('laravel-gpt.disk.name'));
 
         $content = $disk->get($path);
         $extension = pathinfo($path, PATHINFO_EXTENSION);

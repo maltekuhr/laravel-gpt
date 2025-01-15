@@ -11,11 +11,7 @@ class DateRuleConverter extends AbstractRuleConverter
     {
         if (in_array('date', $this->rules)) {
             $this->setType('string');
-            if ($this->schemaType === SchemaType::OPEN_API) {
-                $this->addDescription('Format: YYYY-MM-DD (2024-01-01).');
-            } else {
-                $this->setField('format', 'date');
-            }
+            $this->addDescription('Format: YYYY-MM-DD (2024-01-01).');
         }
     }
 }

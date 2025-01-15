@@ -17,8 +17,9 @@ class ModelResponse
      */
     public function __construct(
         public readonly string $output,
-        public readonly array $confidence,
-        public readonly string $uuid
+        public readonly ?array $confidence,
+        public readonly string $uuid,
+        public readonly ?int $traceId = null
     ) {}
 
     /**
@@ -44,7 +45,8 @@ class ModelResponse
         return [
             'output' => $this->output,
             'confidence' => array_map(fn (TokenConfidence $confidence) => $confidence->toArray(), $this->confidence),
-            'uuid' => $this->uuid
+            'uuid' => $this->uuid,
+            'traceId' => $this->traceId
         ];
     }
 
@@ -59,7 +61,8 @@ class ModelResponse
         return new static(
             output: $data['output'],
             confidence: array_map(fn(array $confidence) => TokenConfidence::fromArray($confidence), $data['confidence']),
-            uuid: $data['uuid']
+            uuid: $data['uuid'],
+            traceId: $data['traceId']
         );
     }
 
@@ -82,6 +85,10 @@ class ModelResponse
      */
     public function confidence(string $path = null, ?ConfidenceCalculator $calculator = null): ?int
     {
+        if (is_null($this->confidence) || count($this->confidence) === 0) {
+            return 100;
+        }
+
         if (!is_null($path)) {
             $tokens = $this->relevantTokens($path);
         } else {
@@ -105,7 +112,7 @@ class ModelResponse
     protected function relevantTokens(string $path = null): array
     {
         if (is_null($path) || !Arr::exists($this->output(), $path)) {
-            throw new \Exception("Path '{$path}' not found in output");
+           // throw new \Exception("Path '{$path}' not found in output");
         }
 
         $positions = JsonPathFinder::findPosition($this->output, $path);
