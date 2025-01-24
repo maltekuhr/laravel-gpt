@@ -22,23 +22,13 @@ class GptTrace extends Model
     ];
 
     /**
-     * The "booted" method of the model.
+     * Get the database connection name for the model.
      *
-     * @return void
+     * @return string|null
      */
-    protected static function booted()
+    public function getConnectionName()
     {
-        static::saving(function ($model) {
-            $model->connection = config('laravel-gpt.database.connection');
-        });
-
-        static::retrieved(function ($model) {
-            $model->connection = config('laravel-gpt.database.connection');
-        });
-
-        static::deleting(function ($model) {
-            $model->connection = config('laravel-gpt.database.connection');
-        });
+        return config('laravel-gpt.database.connection');
     }
 
     /**
