@@ -27,16 +27,22 @@ class GPTServiceProvider extends BaseServiceProvider implements DeferrableProvid
         $this->app->singleton(ClientContract::class, static function (): Client {
             $apiKey = config('laravel-gpt.api_key');
             $organization = config('laravel-gpt.organization');
+            $baseUri = config('laravel-gpt.base_uri');
 
             if (! is_string($apiKey) || ($organization !== null && ! is_string($organization))) {
                 throw ApiKeyIsMissingException::create();
             }
 
-            return OpenAI::factory()
+            $client = OpenAI::factory()
                 ->withApiKey($apiKey)
                 ->withOrganization($organization)
-                ->withHttpClient(new \GuzzleHttp\Client(['timeout' => config('laravel-gpt.request_timeout', 30)]))
-                ->make();
+                ->withHttpClient(new \GuzzleHttp\Client(['timeout' => config('laravel-gpt.request_timeout', 30)]));
+
+            if ($baseUri !== null) {
+                $client->withBaseUri($baseUri);
+            }
+
+            return $client->make();
         });
 
         $this->app->alias(ClientContract::class, 'openai');

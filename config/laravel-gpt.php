@@ -68,6 +68,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Base URI
+    |--------------------------------------------------------------------------
+    |
+    | The base URI used to make requests against the OpenAI API or other
+    | compatible API. This is useful if you want to use a different API
+    | endpoint, e.g. for testing purposes.
+    */
+    'base_uri' => env('OPENAI_BASE_URI'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Rule Converters
     |--------------------------------------------------------------------------
     |
