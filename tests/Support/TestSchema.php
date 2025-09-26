@@ -1,6 +1,6 @@
 <?php
 
-namespace MalteKuhr\LaravelGPT\Tests\Support;
+namespace MalteKuhr\LaravelGpt\Tests\Support;
 
 class TestSchema
 {
@@ -41,15 +41,12 @@ class TestSchema
         }
     }
 
-
-    public function required(): self
-    {
-        $this->schema['required'][] = $this->field;
-        return $this;
-    }
-
     public function toArray(): array
     {
-        return $this->schema;
+        return [
+            ...$this->schema,
+            'required' => array_keys($this->schema['properties']),
+            'additionalProperties' => false,
+        ];
     }
 }

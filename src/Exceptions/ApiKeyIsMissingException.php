@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MalteKuhr\LaravelGPT\Exceptions;
+namespace MalteKuhr\LaravelGpt\Exceptions;
 
 use InvalidArgumentException;
 
