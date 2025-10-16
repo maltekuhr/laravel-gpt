@@ -44,7 +44,7 @@ class ModelResponse
     {
         return [
             'output' => $this->output,
-            'confidence' => array_map(fn (TokenConfidence $confidence) => $confidence->toArray(), $this->confidence),
+            'confidence' => is_null($this->confidence) ? null : array_map(fn (TokenConfidence $confidence) => $confidence->toArray(), $this->confidence),
             'uuid' => $this->uuid,
             'traceId' => $this->traceId
         ];
@@ -60,9 +60,9 @@ class ModelResponse
     {
         return new static(
             output: $data['output'],
-            confidence: array_map(fn(array $confidence) => TokenConfidence::fromArray($confidence), $data['confidence']),
+            confidence: (isset($data['confidence']) && is_array($data['confidence'])) ? array_map(fn(array $confidence) => TokenConfidence::fromArray($confidence), $data['confidence']) : null,
             uuid: $data['uuid'],
-            traceId: $data['traceId']
+            traceId: $data['traceId'] ?? null
         );
     }
 

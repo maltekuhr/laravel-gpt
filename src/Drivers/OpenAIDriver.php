@@ -98,13 +98,16 @@ class OpenAIDriver implements Driver
         // extract the result from the response
         $result = $response->json('choices.0');
 
-        // extract the logprobs and convert them to a percentage
-        $logprobs = array_map(function ($logprob) {
-            return TokenConfidence::make(
-                token: $logprob['token'], 
-                confidence: min(100, max(0, round(exp($logprob['logprob']) * 100, 2)))
-            );
-        }, $result['logprobs']['content']);
+        // extract the logprobs and convert them to a percentage (optional)
+        $logprobs = null;
+        if (isset($result['logprobs']['content']) && is_array($result['logprobs']['content'])) {
+            $logprobs = array_map(function ($logprob) {
+                return TokenConfidence::make(
+                    token: $logprob['token'],
+                    confidence: min(100, max(0, round(exp($logprob['logprob']) * 100, 2)))
+                );
+            }, $result['logprobs']['content']);
+        }
 
         // check if the response is valid JSON
         if ($this->isValidJson($content = $result['message']['content'])) {
@@ -134,7 +137,9 @@ class OpenAIDriver implements Driver
     public function generatePayload(GptAction $action, bool $training = false): array
     {
         $model = $action->model();
-        $version = config('laravel-gpt.models')[$model]['version'] ?? $model;
+        $modelConfig = config('laravel-gpt.models')[$model] ?? [];
+        $version = $modelConfig['version'] ?? $model;
+        $logprobsEnabled = (bool)($modelConfig['log_props'] ?? true);
         
         return array_filter([
             'messages' => $this->getMessages($action, training: $training),
@@ -146,7 +151,8 @@ class OpenAIDriver implements Driver
                 ],
                 'model' => $version,
                 'max_tokens' => $action->maxTokens(),
-                'logprobs' => true,
+                // include logprobs only when enabled at the model config level
+                'logprobs' => $logprobsEnabled ? true : null,
             ] : []),
         ], fn ($value) => $value !== null);
     }
